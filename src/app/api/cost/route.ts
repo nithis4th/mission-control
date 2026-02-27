@@ -47,7 +47,7 @@ export async function GET() {
       rawOutput = execSync('openclaw sessions --json 2>/dev/null', {
         timeout: 10000,
         encoding: 'utf-8',
-        env: { ...process.env, PATH: '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:' + (process.env.PATH || '') },
+        env: { ...process.env, PATH: '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:' + (process.env.PATH || ''), OPENCLAW_GATEWAY_TOKEN: process.env.OPENCLAW_GATEWAY_TOKEN || '' },
       });
     } catch {
       return NextResponse.json({
