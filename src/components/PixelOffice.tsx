@@ -30,72 +30,74 @@ interface AgentConfig {
 }
 
 const AGENTS: AgentConfig[] = [
-  // Top cluster (facing desks)
+  // ===== LEFT HALF — WORK ZONE (x: 20-410) =====
+  // แถวบน: Eve + Dexter (หันลง)
   {
-    name: 'Monalisa',
-    label: 'Artist',
-    color: '#db61a2',
-    seatX: 615, seatY: 285,
-    deskX: 190, deskY: 72, deskW: 120, deskH: 40,
-    features: ['art-supplies'],
-    emoji: '🎨',
-    gender: 'female', hairColor: '#1a0a00', dressColor: '#1a4a2a', skin: '#c49a6c',
-  },
-  {
-    name: 'Sherlock',
-    label: 'CMO',
-    color: '#3fb950',
-    seatX: 250, seatY: 228,
-    deskX: 190, deskY: 176, deskW: 120, deskH: 40,
-    features: ['whiteboard'],
-    emoji: '🔍',
+    name: 'Eve',
+    label: 'COO',
+    color: '#a371f7',
+    seatX: 60, seatY: 180,
+    deskX: 30, deskY: 100, deskW: 140, deskH: 50,
+    features: ['big-desk', 'nameplate'],
+    emoji: '🧠',
+    gender: 'female', hairColor: '#c8962a', dressColor: '#6b35a8',
   },
   {
     name: 'Dexter',
     label: 'CTO',
     color: '#58a6ff',
-    seatX: 610, seatY: 138,
-    deskX: 545, deskY: 72, deskW: 130, deskH: 40,
+    seatX: 240, seatY: 180,
+    deskX: 210, deskY: 100, deskW: 140, deskH: 50,
     features: ['multi-monitor'],
     emoji: '🤖',
   },
+  // แถวล่าง: Sherlock + Bluma (หันขึ้น — facing แถวบน)
   {
-    name: 'Eve',
-    label: 'COO',
-    color: '#a371f7',
-    seatX: 610, seatY: 228,
-    deskX: 540, deskY: 172, deskW: 140, deskH: 45,
-    features: ['big-desk', 'nameplate'],
-    emoji: '🧠',
-    gender: 'female', hairColor: '#c8962a', dressColor: '#6b35a8',
-  },
-  // Bottom cluster (facing desks)
-  {
-    name: 'Shelby',
-    label: 'Strategist',
-    color: '#d29922',
-    seatX: 450, seatY: 340,
-    deskX: 190, deskY: 276, deskW: 120, deskH: 40,
-    features: ['charts'],
-    emoji: '📊',
-    gender: 'female', hairColor: '#5c3317', dressColor: '#8b1a1a',
+    name: 'Sherlock',
+    label: 'CMO',
+    color: '#3fb950',
+    seatX: 60, seatY: 300,
+    deskX: 30, deskY: 300, deskW: 140, deskH: 50,
+    features: ['whiteboard'],
+    emoji: '🔍',
   },
   {
     name: 'Bluma',
     label: 'CISO',
     color: '#f85149',
-    seatX: 250, seatY: 432,
-    deskX: 190, deskY: 380, deskW: 120, deskH: 40,
+    seatX: 240, seatY: 300,
+    deskX: 210, deskY: 300, deskW: 140, deskH: 50,
     features: ['security-monitor'],
     emoji: '🛡️',
+  },
+  // ===== RIGHT HALF — LOUNGE ZONE (x: 450-840) =====
+  {
+    name: 'Shelby',
+    label: 'Strategist',
+    color: '#d29922',
+    seatX: 520, seatY: 380,
+    deskX: 460, deskY: 100, deskW: 0, deskH: 0,
+    features: [],
+    emoji: '📊',
+    gender: 'female', hairColor: '#5c3317', dressColor: '#8b1a1a',
+  },
+  {
+    name: 'Monalisa',
+    label: 'Artist',
+    color: '#db61a2',
+    seatX: 630, seatY: 380,
+    deskX: 460, deskY: 100, deskW: 0, deskH: 0,
+    features: [],
+    emoji: '🎨',
+    gender: 'female', hairColor: '#1a0a00', dressColor: '#1a4a2a', skin: '#c49a6c',
   },
   {
     name: 'Goku',
     label: 'Trainer',
     color: '#ff8c00',
-    seatX: 390, seatY: 270,
-    deskX: 560, deskY: 276, deskW: 100, deskH: 38,
-    features: ['small-energetic'],
+    seatX: 490, seatY: 280,
+    deskX: 460, deskY: 100, deskW: 0, deskH: 0,
+    features: [],
     emoji: '⚡',
   },
 ];
@@ -638,6 +640,38 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
 
           <rect x={785} y={250} width={18} height={32} rx={2} fill="#4a6fa5" />
           <rect x={787} y={240} width={14} height={12} rx={7} fill="#a8d0f0" opacity={0.5} />
+
+          {/* ===== ZONE DIVIDER ===== */}
+          <rect x={428} y={10} width={2} height={560} fill="#2a3544" opacity={0.8}/>
+          <text x={110} y={60} textAnchor="middle" fill="#3d4f3d" fontSize={9} fontFamily="monospace" letterSpacing={2}>WORK ZONE</text>
+          <text x={640} y={60} textAnchor="middle" fill="#3d3d4f" fontSize={9} fontFamily="monospace" letterSpacing={2}>LOUNGE ZONE</text>
+
+          {/* ===== LOUNGE FURNITURE ===== */}
+          {/* พรม */}
+          <ellipse cx={640} cy={400} rx={185} ry={95} fill="#1a1a2e" opacity={0.65}/>
+
+          {/* โซฟา L-shape แนวนอน (bottom) */}
+          <rect x={480} y={395} width={280} height={20} rx={4} fill="#1a1228"/>
+          <rect x={480} y={408} width={280} height={60} rx={8} fill="#2a1f3d"/>
+          <rect x={483} y={415} width={274} height={35} rx={4} fill="#3d2d5a"/>
+
+          {/* โซฟา L-shape แนวตั้ง (right arm) */}
+          <rect x={718} y={280} width={20} height={180} rx={4} fill="#1a1228"/>
+          <rect x={730} y={280} width={55} height={180} rx={8} fill="#2a1f3d"/>
+          <rect x={733} y={283} width={35} height={174} rx={4} fill="#3d2d5a"/>
+
+          {/* เก้าอี้ 2 ตัว */}
+          <rect x={455} y={288} width={52} height={52} rx={6} fill="#1e2d1e"/>
+          <rect x={455} y={280} width={52} height={12} rx={4} fill="#162416"/>
+          <rect x={570} y={268} width={52} height={52} rx={6} fill="#1e2d1e"/>
+          <rect x={570} y={260} width={52} height={12} rx={4} fill="#162416"/>
+
+          {/* TV ผนังขวา */}
+          <rect x={798} y={155} width={52} height={90} rx={4} fill="#111" stroke="#444" strokeWidth={2}/>
+          <rect x={803} y={160} width={42} height={72} rx={2} fill="#050518"/>
+          <rect x={803} y={160} width={42} height={72} rx={2} fill="url(#tvGlow)" opacity={0.7}/>
+          <rect x={813} y={234} width={20} height={10} fill="#333"/>
+          <rect x={805} y={164} width={8} height={2} rx={1} fill="#58a6ff" opacity={0.5}/>
 
           {AGENTS.map(a => <Desk key={`d-${a.name}`} agent={a} status={getStatus(a.name)} />)}
 
