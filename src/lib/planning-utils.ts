@@ -1,19 +1,17 @@
-import { getOpenClawClient } from './openclaw/client';
+import { getSessionHistory } from './openclaw/gateway-http';
 
 // Maximum input length for extractJSON to prevent ReDoS attacks
 const MAX_EXTRACT_JSON_LENGTH = 1_000_000; // 1MB
 
 /**
  * Extract JSON from a response that might have markdown code blocks or surrounding text.
- * Handles various formats:
- * - Direct JSON
- * - Markdown code blocks (```json ... ``` or ``` ... ```)
- * - JSON embedded in text (first { to last })
  */
 export function extractJSON(text: string): object | null {
-  // Security: Prevent ReDoS on massive inputs
   if (text.length > MAX_EXTRACT_JSON_LENGTH) {
-    console.warn('[Planning Utils] Input exceeds maximum length for JSON extraction:', text.length);
+    console.warn(
+      '[Planning Utils] Input exceeds maximum length for JSON extraction:',
+      text.length,
+    );
     return null;
   }
 
@@ -24,7 +22,7 @@ export function extractJSON(text: string): object | null {
     // Continue to other methods
   }
 
-  // Try to extract from markdown code block (```json ... ``` or ``` ... ```)
+  // Try to extract from markdown code block
   const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (codeBlockMatch) {
     try {
@@ -34,7 +32,7 @@ export function extractJSON(text: string): object | null {
     }
   }
 
-  // Try to find JSON object in the text (first { to last })
+  // Try to find JSON object in the text
   const firstBrace = text.indexOf('{');
   const lastBrace = text.lastIndexOf('}');
   if (firstBrace !== -1 && lastBrace > firstBrace) {
@@ -49,39 +47,35 @@ export function extractJSON(text: string): object | null {
 }
 
 /**
- * Get messages from OpenClaw API for a given session.
- * Returns assistant messages with text content extracted.
+ * Get assistant messages from OpenClaw API for a given session.
+ * Uses HTTP /tools/invoke instead of WebSocket.
  */
 export async function getMessagesFromOpenClaw(
-  sessionKey: string
+  sessionKey: string,
 ): Promise<Array<{ role: string; content: string }>> {
   try {
-    const client = getOpenClawClient();
-    if (!client.isConnected()) {
-      await client.connect();
-    }
-
-    // Use chat.history API to get session messages
-    const result = await client.call<{
-      messages: Array<{
-        role: string;
-        content: Array<{ type: string; text?: string }>;
-      }>;
-    }>('chat.history', {
-      sessionKey,
-      limit: 50,
-    });
+    const history = await getSessionHistory(sessionKey);
 
     const messages: Array<{ role: string; content: string }> = [];
 
-    for (const msg of result.messages || []) {
-      if (msg.role === 'assistant') {
-        const textContent = msg.content?.find((c) => c.type === 'text');
-        if (textContent?.text && textContent.text.trim().length > 0) {
-          messages.push({
-            role: 'assistant',
-            content: textContent.text,
-          });
+    for (const msg of history) {
+      const m = msg as Record<string, unknown>;
+      if (m.role === 'assistant') {
+        let textContent = '';
+
+        if (typeof m.content === 'string') {
+          textContent = m.content;
+        } else if (Array.isArray(m.content)) {
+          const textBlock = (m.content as Array<Record<string, unknown>>).find(
+            (c) => c.type === 'text',
+          );
+          if (textBlock?.text && typeof textBlock.text === 'string') {
+            textContent = textBlock.text;
+          }
+        }
+
+        if (textContent.trim().length > 0) {
+          messages.push({ role: 'assistant', content: textContent });
         }
       }
     }

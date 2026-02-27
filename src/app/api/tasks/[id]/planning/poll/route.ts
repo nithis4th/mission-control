@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryOne, run, getDb, queryAll } from '@/lib/db';
-import { getOpenClawClient } from '@/lib/openclaw/client';
 import { broadcast } from '@/lib/events';
 import { extractJSON, getMessagesFromOpenClaw } from '@/lib/planning-utils';
 import { Task } from '@/lib/types';

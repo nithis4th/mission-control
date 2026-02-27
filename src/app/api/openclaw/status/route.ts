@@ -1,47 +1,26 @@
 import { NextResponse } from 'next/server';
-import { getOpenClawClient } from '@/lib/openclaw/client';
+import { listSessions } from '@/lib/openclaw/gateway-http';
 
 // GET /api/openclaw/status - Check OpenClaw connection status
 export async function GET() {
+  const gatewayUrl = (process.env.OPENCLAW_GATEWAY_URL || 'ws://127.0.0.1:18789')
+    .replace(/^ws(s?):\/\//, 'http$1://');
+
   try {
-    const client = getOpenClawClient();
-
-    if (!client.isConnected()) {
-      try {
-        await client.connect();
-      } catch (err) {
-        return NextResponse.json({
-          connected: false,
-          error: 'Failed to connect to OpenClaw Gateway',
-          gateway_url: process.env.OPENCLAW_GATEWAY_URL || 'ws://127.0.0.1:18789',
-        });
-      }
-    }
-
-    // Try to list sessions to verify connection
-    try {
-      const sessions = await client.listSessions();
-      return NextResponse.json({
-        connected: true,
-        sessions_count: sessions.length,
-        sessions: sessions,
-        gateway_url: process.env.OPENCLAW_GATEWAY_URL || 'ws://127.0.0.1:18789',
-      });
-    } catch (err) {
-      return NextResponse.json({
-        connected: true,
-        error: 'Connected but failed to list sessions',
-        gateway_url: process.env.OPENCLAW_GATEWAY_URL || 'ws://127.0.0.1:18789',
-      });
-    }
+    const sessions = await listSessions();
+    return NextResponse.json({
+      connected: true,
+      sessions_count: sessions.length,
+      sessions,
+      gateway_url: gatewayUrl,
+    });
   } catch (error) {
     console.error('OpenClaw status check failed:', error);
-    return NextResponse.json(
-      {
-        connected: false,
-        error: 'Internal server error',
-      },
-      { status: 500 }
-    );
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({
+      connected: false,
+      error: msg,
+      gateway_url: gatewayUrl,
+    });
   }
 }

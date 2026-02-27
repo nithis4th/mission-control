@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { queryOne, queryAll, run } from '@/lib/db';
-import { getOpenClawClient } from '@/lib/openclaw/client';
+import { sendToSession } from '@/lib/openclaw/gateway-http';
 import { broadcast } from '@/lib/events';
 import { getProjectsPath, getMissionControlUrl } from '@/lib/config';
 import type { Task, Agent, OpenClawSession } from '@/lib/types';
@@ -74,20 +74,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           message: `There ${otherOrchestrators.length === 1 ? 'is' : 'are'} ${otherOrchestrators.length} other orchestrator${otherOrchestrators.length === 1 ? '' : 's'} available in this workspace: ${otherOrchestrators.map(o => o.name).join(', ')}. Consider assigning this task to them instead.`,
           otherOrchestrators,
         }, { status: 409 }); // 409 Conflict - indicating there's an alternative
-      }
-    }
-
-    // Connect to OpenClaw Gateway
-    const client = getOpenClawClient();
-    if (!client.isConnected()) {
-      try {
-        await client.connect();
-      } catch (err) {
-        console.error('Failed to connect to OpenClaw Gateway:', err);
-        return NextResponse.json(
-          { error: 'Failed to connect to OpenClaw Gateway' },
-          { status: 503 }
-        );
       }
     }
 
@@ -168,16 +154,10 @@ When complete, reply with:
 
 If you need help or clarification, ask the orchestrator.`;
 
-    // Send message to agent's session using chat.send
+    // Send message to agent's session using HTTP chat completions
     try {
-      // Use sessionKey for routing to the agent's session
-      // Format: agent:main:{openclaw_session_id}
       const sessionKey = `agent:main:${session.openclaw_session_id}`;
-      await client.call('chat.send', {
-        sessionKey,
-        message: taskMessage,
-        idempotencyKey: `dispatch-${task.id}-${Date.now()}`
-      });
+      await sendToSession(sessionKey, taskMessage);
 
       // Update task status to in_progress
       run(

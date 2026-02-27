@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, queryAll, queryOne, run } from '@/lib/db';
-import { getOpenClawClient } from '@/lib/openclaw/client';
+import { sendToSession } from '@/lib/openclaw/gateway-http';
 import { broadcast } from '@/lib/events';
 import { extractJSON } from '@/lib/planning-utils';
 // File system imports removed - using OpenClaw API instead
@@ -148,18 +148,8 @@ Respond with ONLY valid JSON in this format:
   ]
 }`;
 
-    // Connect to OpenClaw and send the planning request
-    const client = getOpenClawClient();
-    if (!client.isConnected()) {
-      await client.connect();
-    }
-
-    // Send planning request to the planning session
-    await client.call('chat.send', {
-      sessionKey: sessionKey,
-      message: planningPrompt,
-      idempotencyKey: `planning-start-${taskId}-${Date.now()}`,
-    });
+    // Send planning request to OpenClaw via HTTP
+    await sendToSession(sessionKey, planningPrompt);
 
     // Store the session key and initial message
     const messages = [{ role: 'user', content: planningPrompt, timestamp: Date.now() }];

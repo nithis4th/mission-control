@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOpenClawClient } from '@/lib/openclaw/client';
+import { listSessions } from '@/lib/openclaw/gateway-http';
 import { queryAll } from '@/lib/db';
 import type { OpenClawSession } from '@/lib/types';
 
@@ -31,28 +31,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(sessions);
     }
 
-    // Otherwise, query OpenClaw Gateway for live sessions
-    const client = getOpenClawClient();
-
-    if (!client.isConnected()) {
-      try {
-        await client.connect();
-      } catch {
-        return NextResponse.json(
-          { error: 'Failed to connect to OpenClaw Gateway' },
-          { status: 503 }
-        );
-      }
-    }
-
-    const sessions = await client.listSessions();
-    return NextResponse.json({ sessions });
+    // Query OpenClaw Gateway HTTP API for live sessions
+    const sessions = await listSessions();
+    return NextResponse.json({
+      sessions,
+      count: sessions.length,
+    });
   } catch (error) {
     console.error('Failed to list OpenClaw sessions:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const msg = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -60,35 +48,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { channel, peer } = body;
+    const { channel } = body;
 
     if (!channel) {
       return NextResponse.json(
         { error: 'channel is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const client = getOpenClawClient();
-
-    if (!client.isConnected()) {
-      try {
-        await client.connect();
-      } catch {
-        return NextResponse.json(
-          { error: 'Failed to connect to OpenClaw Gateway' },
-          { status: 503 }
-        );
-      }
-    }
-
-    const session = await client.createSession(channel, peer);
-    return NextResponse.json({ session }, { status: 201 });
+    // Sessions are created automatically when messages are sent via
+    // /v1/chat/completions. Return a helpful error.
+    return NextResponse.json(
+      {
+        error:
+          'Direct session creation is not supported via HTTP. Send a message via POST /api/chat to auto-create a session.',
+      },
+      { status: 501 },
+    );
   } catch (error) {
     console.error('Failed to create OpenClaw session:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { getOpenClawClient } from '@/lib/openclaw/client';
+import { sendToSession } from '@/lib/openclaw/gateway-http';
 import { extractJSON } from '@/lib/planning-utils';
 
 // POST /api/tasks/[id]/planning/answer - Submit an answer and get next question
@@ -85,23 +85,12 @@ If planning is complete, respond with JSON:
     const messages = task.planning_messages ? JSON.parse(task.planning_messages) : [];
     messages.push({ role: 'user', content: answerText, timestamp: Date.now() });
 
-    // Connect to OpenClaw and send the answer
-    const client = getOpenClawClient();
-    if (!client.isConnected()) {
-      console.log('[Planning Answer] Connecting to OpenClaw...');
-      await client.connect();
-    }
-
+    // Send the answer to OpenClaw via HTTP chat completions
     console.log('[Planning Answer] Sending answer to OpenClaw, session:', task.planning_session_key);
-    console.log('[Planning Answer] Answer text:', answerText);
 
     try {
-      const sendResult = await client.call('chat.send', {
-        sessionKey: task.planning_session_key,
-        message: answerPrompt,
-        idempotencyKey: `planning-answer-${taskId}-${Date.now()}`,
-      });
-      console.log('[Planning Answer] Send successful, result:', sendResult);
+      await sendToSession(task.planning_session_key!, answerPrompt);
+      console.log('[Planning Answer] Send successful');
     } catch (sendError) {
       console.error('[Planning Answer] Failed to send to OpenClaw:', sendError);
       return NextResponse.json({ error: 'Failed to send answer to orchestrator: ' + (sendError as Error).message }, { status: 500 });
