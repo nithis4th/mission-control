@@ -102,18 +102,18 @@ const AGENTS: AgentConfig[] = [
   },
 ];
 
-const DOOR = { x: 420, y: 555 };
+const DOOR = { x: 214, y: 555 };
 const PX = 3;
 const CHAR_W = 14 * PX;
 const CHAR_H = 22 * PX;
 
 const LOUNGE_SEATS = [
-  { cx: 410, by: 510 },
-  { cx: 470, by: 510 },
-  { cx: 530, by: 510 },
-  { cx: 590, by: 510 },
-  { cx: 650, by: 510 },
-  { cx: 710, by: 510 },
+  { cx: 520, by: 435 },  // โซฟาแนวนอน ซ้าย
+  { cx: 630, by: 435 },  // โซฟาแนวนอน ขวา
+  { cx: 490, by: 310 },  // เก้าอี้ 1
+  { cx: 580, by: 295 },  // เก้าอี้ 2
+  { cx: 750, by: 360 },  // โซฟาแนวตั้ง
+  { cx: 680, by: 435 },  // โซฟาแนวนอน กลาง
 ];
 
 function Agent({
