@@ -10,6 +10,11 @@ import { MissionQueue } from '@/components/MissionQueue';
 import { LiveFeed } from '@/components/LiveFeed';
 import { SSEDebugPanel } from '@/components/SSEDebugPanel';
 import { ChatPanel } from '@/components/ChatPanel';
+import { TeamTab } from '@/components/tabs/TeamTab';
+import { SoulTab } from '@/components/tabs/SoulTab';
+import { CostTab } from '@/components/tabs/CostTab';
+import { CronTab } from '@/components/tabs/CronTab';
+import { SkillsTab } from '@/components/tabs/SkillsTab';
 import { useMissionControl } from '@/lib/store';
 import { useSSE } from '@/hooks/useSSE';
 import { debug } from '@/lib/debug';
@@ -246,6 +251,47 @@ export default function WorkspacePage() {
               <p className="text-mc-text-secondary text-xs mt-2">
                 Coming soon...
               </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'team' && (
+          <div className="flex-1 flex overflow-hidden">
+            <TeamTab />
+          </div>
+        )}
+
+        {activeTab === 'soul' && (
+          <div className="flex-1 flex overflow-hidden">
+            <SoulTab />
+          </div>
+        )}
+
+        {activeTab === 'cost' && (
+          <div className="flex-1 flex overflow-hidden">
+            <CostTab />
+          </div>
+        )}
+
+        {activeTab === 'cron' && (
+          <div className="flex-1 flex overflow-hidden">
+            <CronTab />
+          </div>
+        )}
+
+        {activeTab === 'skills' && (
+          <div className="flex-1 flex overflow-hidden">
+            <SkillsTab />
+          </div>
+        )}
+
+        {/* Fallback for comingSoon tabs not yet implemented */}
+        {['tasks', 'content', 'docs', 'approval', 'office'].includes(activeTab) && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center opacity-60">
+              <div className="text-6xl mb-4">🚧</div>
+              <h2 className="text-xl font-bold mb-2 capitalize">{activeTab}</h2>
+              <p className="text-mc-text-secondary text-sm">Coming soon...</p>
             </div>
           </div>
         )}

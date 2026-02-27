@@ -16,7 +16,7 @@ async function getActiveAgentIds(): Promise<Set<string>> {
   try {
     const sessions = await listSessions();
     const activeIds = new Set<string>();
-    const FIVE_MIN_MS = 5 * 60 * 1000;
+    const TWO_MIN_MS = 2 * 60 * 1000;
     const now = Date.now();
 
     for (const session of sessions) {
@@ -29,7 +29,7 @@ async function getActiveAgentIds(): Promise<Set<string>> {
 
       // Gateway may return epoch seconds or milliseconds
       const updatedAtMs = updatedAtRaw < 1e12 ? updatedAtRaw * 1000 : updatedAtRaw;
-      const isActiveWithinThreshold = now - updatedAtMs <= FIVE_MIN_MS;
+      const isActiveWithinThreshold = now - updatedAtMs <= TWO_MIN_MS;
 
       if (isActiveWithinThreshold) {
         activeIds.add(match[1].toLowerCase());

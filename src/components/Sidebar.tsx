@@ -79,35 +79,30 @@ const navItems: NavItem[] = [
     label: 'Team',
     emoji: '👥',
     icon: <Users className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'soul',
     label: 'Soul',
     emoji: '🧠',
     icon: <BrainCircuit className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'cost',
     label: 'Cost',
     emoji: '💰',
     icon: <DollarSign className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'cron',
     label: 'Cron Jobs',
     emoji: '⏰',
     icon: <Clock className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'skills',
     label: 'Skills',
     emoji: '🔧',
     icon: <Wrench className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
 ];
 
