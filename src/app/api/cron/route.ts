@@ -29,7 +29,7 @@ export async function GET() {
     }
 
     const parsed = JSON.parse(rawOutput);
-    const rawJobs: RawJob[] = parsed.jobs || [];
+    const rawJobs: RawJob[] = Array.isArray(parsed) ? parsed : (parsed.jobs || parsed.crons || []);
 
     const jobs = rawJobs.map((job) => {
       const scheduleStr =

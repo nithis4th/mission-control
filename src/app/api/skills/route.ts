@@ -24,17 +24,18 @@ export async function GET() {
 
     const raw = readFileSync(OPENCLAW_JSON, 'utf-8');
     const config = JSON.parse(raw);
-    const agentsConfig = config.agents || {};
 
-    const result = Object.entries(agentsConfig).map(([agentId, agentData]) => {
-      const data = agentData as { skills?: Record<string, unknown> | string[] };
-      let skills: string[] = [];
+    // openclaw.json structure: agents.list[] where each item has { id, skills[] }
+    const agentsList: Array<{ id: string; skills?: string[] }> =
+      config.agents?.list || [];
 
-      if (Array.isArray(data.skills)) {
-        skills = data.skills.map(String);
-      } else if (data.skills && typeof data.skills === 'object') {
-        skills = Object.keys(data.skills);
-      }
+    const ORDER = ['main', 'dexter', 'sherlock', 'shelby', 'bluma', 'goku', 'monalisa'];
+
+    const result = agentsList.map((agent) => {
+      const agentId = agent.id || '';
+      const skills: string[] = Array.isArray(agent.skills)
+        ? agent.skills.map(String)
+        : [];
 
       const meta = AGENT_META[agentId] || { label: agentId, emoji: '🤖' };
 
@@ -47,7 +48,6 @@ export async function GET() {
     });
 
     // Sort: known agents first in defined order
-    const ORDER = ['main', 'dexter', 'sherlock', 'shelby', 'bluma', 'goku', 'monalisa'];
     result.sort((a, b) => {
       const ai = ORDER.indexOf(a.agentId);
       const bi = ORDER.indexOf(b.agentId);

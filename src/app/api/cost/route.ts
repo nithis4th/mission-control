@@ -44,7 +44,7 @@ export async function GET() {
   try {
     let rawOutput = '';
     try {
-      rawOutput = execSync('openclaw sessions --all-agents --json 2>/dev/null', {
+      rawOutput = execSync('openclaw sessions --json 2>/dev/null', {
         timeout: 10000,
         encoding: 'utf-8',
         env: { ...process.env, PATH: '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:' + (process.env.PATH || '') },
