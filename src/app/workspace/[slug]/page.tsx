@@ -7,6 +7,7 @@ import { ChevronLeft } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
 import { MissionQueue } from '@/components/MissionQueue';
 import { LiveFeed } from '@/components/LiveFeed';
+import { PixelOffice } from '@/components/PixelOffice';
 import { SSEDebugPanel } from '@/components/SSEDebugPanel';
 import { ChatPanel } from '@/components/ChatPanel';
 import { TeamTab } from '@/components/tabs/TeamTab';
@@ -311,13 +312,9 @@ export default function WorkspacePage() {
         )}
 
         {/* Fallback for remaining comingSoon tabs */}
-        {['office'].includes(activeTab) && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center opacity-60">
-              <div className="text-6xl mb-4">🚧</div>
-              <h2 className="text-xl font-bold mb-2 capitalize">{activeTab}</h2>
-              <p className="text-mc-text-secondary text-sm">Coming soon...</p>
-            </div>
+        {activeTab === 'office' && (
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            <PixelOffice compact />
           </div>
         )}
       </div>
