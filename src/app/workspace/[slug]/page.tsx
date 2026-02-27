@@ -315,6 +315,7 @@ export default function WorkspacePage() {
         {activeTab === 'office' && (
           <div className="flex-1 flex overflow-hidden min-h-0">
             <PixelOffice compact />
+            <LiveFeed />
           </div>
         )}
       </div>
