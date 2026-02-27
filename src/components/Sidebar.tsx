@@ -1,18 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  Bot,
-  MessageSquare,
-  BarChart3,
-  ScrollText,
-  Brain,
   ChevronLeft,
   ChevronRight,
   Zap,
   Menu,
   X,
+  ClipboardList,
+  Newspaper,
+  FileText,
+  CheckSquare,
+  Building2,
+  Users,
+  BrainCircuit,
+  DollarSign,
+  Clock,
+  Wrench,
 } from 'lucide-react';
 import { useMissionControl } from '@/lib/store';
 
@@ -29,50 +34,153 @@ interface NavItem {
   label: string;
   emoji: string;
   icon: React.ReactNode;
-  href?: string; // external route (navigates away)
+  href?: string;
+  comingSoon?: boolean;
 }
 
 const navItems: NavItem[] = [
   {
-    id: 'agents',
-    label: 'Agents',
-    emoji: '🤖',
-    icon: <Bot className="w-3.5 h-3.5" />,
+    id: 'tasks',
+    label: 'Task',
+    emoji: '📋',
+    icon: <ClipboardList className="w-3.5 h-3.5" />,
+    comingSoon: true,
   },
   {
-    id: 'chat',
-    label: 'Chat',
-    emoji: '💬',
-    icon: <MessageSquare className="w-3.5 h-3.5" />,
+    id: 'content',
+    label: 'Content',
+    emoji: '📰',
+    icon: <Newspaper className="w-3.5 h-3.5" />,
+    comingSoon: true,
   },
   {
-    id: 'activity',
-    label: 'Activity',
-    emoji: '📊',
-    icon: <BarChart3 className="w-3.5 h-3.5" />,
+    id: 'docs',
+    label: 'Doc',
+    emoji: '📄',
+    icon: <FileText className="w-3.5 h-3.5" />,
+    comingSoon: true,
   },
   {
-    id: 'history',
-    label: 'Chat History',
-    emoji: '📜',
-    icon: <ScrollText className="w-3.5 h-3.5" />,
+    id: 'approval',
+    label: 'Approval',
+    emoji: '✅',
+    icon: <CheckSquare className="w-3.5 h-3.5" />,
+    comingSoon: true,
   },
   {
-    id: 'brain',
-    label: 'Second Brain',
+    id: 'office',
+    label: 'Office',
+    emoji: '🏢',
+    icon: <Building2 className="w-3.5 h-3.5" />,
+    href: '/office',
+  },
+  {
+    id: 'team',
+    label: 'Team',
+    emoji: '👥',
+    icon: <Users className="w-3.5 h-3.5" />,
+    comingSoon: true,
+  },
+  {
+    id: 'soul',
+    label: 'Soul',
     emoji: '🧠',
-    icon: <Brain className="w-3.5 h-3.5" />,
-    href: '/brain',
+    icon: <BrainCircuit className="w-3.5 h-3.5" />,
+    comingSoon: true,
+  },
+  {
+    id: 'cost',
+    label: 'Cost',
+    emoji: '💰',
+    icon: <DollarSign className="w-3.5 h-3.5" />,
+    comingSoon: true,
+  },
+  {
+    id: 'cron',
+    label: 'Cron Jobs',
+    emoji: '⏰',
+    icon: <Clock className="w-3.5 h-3.5" />,
+    comingSoon: true,
+  },
+  {
+    id: 'skills',
+    label: 'Skills',
+    emoji: '🔧',
+    icon: <Wrench className="w-3.5 h-3.5" />,
+    comingSoon: true,
   },
 ];
+
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2800);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '24px',
+        right: '24px',
+        zIndex: 200,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '10px 18px',
+        borderRadius: '14px',
+        background: 'linear-gradient(135deg, #7c3aed, #c026d3, #ec4899)',
+        color: '#fff',
+        fontWeight: 700,
+        fontSize: '14px',
+        boxShadow: '0 8px 32px rgba(124,58,237,0.4)',
+        border: '1px solid rgba(255,255,255,0.15)',
+      }}
+    >
+      {message}
+    </div>
+  );
+}
+
+function ComingSoonToast({ onDone }: { onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 1800);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '24px',
+        right: '24px',
+        zIndex: 200,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '10px 18px',
+        borderRadius: '14px',
+        background: '#1a1a2e',
+        color: '#e2e8f0',
+        fontWeight: 700,
+        fontSize: '14px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}
+    >
+      🚧 Coming Soon
+    </div>
+  );
+}
 
 export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps) {
   const router = useRouter();
   const { isOnline } = useMissionControl();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [pingLoading, setPingLoading] = useState(false);
+  const [toast, setToast] = useState<'ping' | 'soon' | null>(null);
 
-  // Load collapsed state from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     if (stored === 'true') setIsCollapsed(true);
@@ -87,11 +195,30 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
   const handleNavClick = (item: NavItem) => {
     if (item.href) {
       router.push(item.href);
+    } else if (item.comingSoon) {
+      setToast('soon');
     } else {
       onTabChange(item.id);
     }
     setIsMobileOpen(false);
   };
+
+  const handlePingEve = useCallback(async () => {
+    if (pingLoading) return;
+    setPingLoading(true);
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'พี่เอก Ping มาค่ะ 👋', agent: 'main' }),
+      });
+    } catch {
+      // silently ok
+    } finally {
+      setPingLoading(false);
+      setToast('ping');
+    }
+  }, [pingLoading]);
 
   const sidebarContent = (
     <>
@@ -116,7 +243,6 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
             <ChevronLeft className="w-3.5 h-3.5" />
           )}
         </button>
-        {/* Mobile close button */}
         <button
           onClick={() => setIsMobileOpen(false)}
           className="p-1 rounded hover:bg-mc-bg-tertiary text-mc-text-secondary lg:hidden"
@@ -125,8 +251,43 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
         </button>
       </div>
 
+      {/* Ping Eve Button */}
+      <div className={`flex-shrink-0 ${isCollapsed ? 'px-1.5 pt-3 pb-2' : 'px-2 pt-3 pb-2'}`}>
+        <button
+          onClick={handlePingEve}
+          disabled={pingLoading}
+          title="Ping Eve"
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            borderRadius: '12px',
+            fontWeight: 700,
+            background: pingLoading
+              ? 'linear-gradient(135deg, #6d28d9, #a21caf)'
+              : 'linear-gradient(135deg, #7c3aed, #c026d3, #ec4899)',
+            color: '#fff',
+            border: 'none',
+            cursor: pingLoading ? 'not-allowed' : 'pointer',
+            opacity: pingLoading ? 0.7 : 1,
+            padding: isCollapsed ? '8px 4px' : '8px 12px',
+            fontSize: '11px',
+            letterSpacing: '0.05em',
+            boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span style={{ fontSize: '16px', lineHeight: 1 }}>
+            {pingLoading ? '⏳' : '🦋'}
+          </span>
+          {!isCollapsed && <span>Ping Eve</span>}
+        </button>
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-1.5 px-1.5 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto py-1 px-1.5 space-y-0.5">
         {!isCollapsed && (
           <div className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-widest text-mc-text-secondary">
             Workspace
@@ -145,6 +306,7 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
                     ? 'bg-mc-accent/10 text-mc-accent border-l-2 border-mc-accent'
                     : 'text-mc-text-secondary hover:bg-mc-bg-tertiary hover:text-mc-text border-l-2 border-transparent'
                 }
+                ${item.comingSoon ? 'opacity-60 hover:opacity-80' : ''}
               `}
               title={isCollapsed ? item.label : undefined}
             >
@@ -152,8 +314,17 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
                 {item.icon}
               </span>
               {!isCollapsed && (
-                <span className={`text-[11px] font-medium truncate ${isActive ? 'text-mc-accent' : ''}`}>
+                <span
+                  className={`text-[11px] font-medium truncate flex-1 text-left ${
+                    isActive ? 'text-mc-accent' : ''
+                  }`}
+                >
                   {item.label}
+                </span>
+              )}
+              {!isCollapsed && item.comingSoon && (
+                <span className="text-[8px] text-mc-text-secondary/50 font-normal flex-shrink-0">
+                  soon
                 </span>
               )}
 
@@ -161,6 +332,9 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
               {isCollapsed && (
                 <div className="absolute left-full ml-2 px-2 py-1 bg-mc-bg border border-mc-border text-mc-text text-xs rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-lg transition-opacity">
                   {item.label}
+                  {item.comingSoon && (
+                    <span className="ml-1 text-mc-text-secondary/60">soon</span>
+                  )}
                 </div>
               )}
             </button>
@@ -192,6 +366,14 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
 
   return (
     <>
+      {/* Toast notifications */}
+      {toast === 'ping' && (
+        <Toast message="Pinged Eve! 🦋" onDone={() => setToast(null)} />
+      )}
+      {toast === 'soon' && (
+        <ComingSoonToast onDone={() => setToast(null)} />
+      )}
+
       {/* Mobile hamburger button */}
       <button
         onClick={() => setIsMobileOpen(true)}
