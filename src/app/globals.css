@@ -297,46 +297,45 @@ body {
   50% { transform: rotate(15deg); }
 }
 
-/* Typing animation — slight body shake */
+/* Typing animation — keep body mostly still, only a tiny settle */
 .pixel-typing {
-  animation: pixel-type-shake 0.2s ease-in-out infinite;
+  animation: pixel-type-settle 1.4s ease-in-out infinite;
 }
 
-@keyframes pixel-type-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-0.7px) translateY(-0.3px); }
-  75% { transform: translateX(0.7px) translateY(-0.3px); }
+@keyframes pixel-type-settle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.4px); }
 }
 
-/* Arm typing animation */
+/* Arm typing animation — subtle */
 .pixel-arm-left {
-  animation: arm-type-left 0.25s ease-in-out infinite;
+  animation: arm-type-left 0.9s ease-in-out infinite;
   transform-origin: top center;
 }
 
 .pixel-arm-right {
-  animation: arm-type-right 0.25s ease-in-out infinite;
+  animation: arm-type-right 0.9s ease-in-out infinite;
   transform-origin: top center;
 }
 
 @keyframes arm-type-left {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-3deg) translateY(-1px); }
+  50% { transform: rotate(-1.5deg) translateY(-0.4px); }
 }
 
 @keyframes arm-type-right {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(3deg) translateY(-1px); }
+  50% { transform: rotate(1.5deg) translateY(-0.4px); }
 }
 
-/* Idle animation — subtle breathing */
+/* Idle/standby animation — gentle breathing */
 .pixel-idle {
-  animation: pixel-breathe 3s ease-in-out infinite;
+  animation: pixel-breathe 4s ease-in-out infinite;
 }
 
 @keyframes pixel-breathe {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-1px); }
+  50% { transform: translateY(-0.6px); }
 }
 
 /* Eye blink */
@@ -400,18 +399,18 @@ body {
   50% { opacity: 0.8; }
 }
 
-/* Zzz floating for standby */
+/* Zzz floating for standby — toned down */
 .pixel-zzz {
-  animation: zzz-float 2.5s ease-in-out infinite;
+  animation: zzz-float 3.2s ease-in-out infinite;
 }
 
 @keyframes zzz-float {
   0%, 100% { 
     transform: translateY(0) scale(1); 
-    opacity: 0.5; 
+    opacity: 0.45; 
   }
   50% { 
-    transform: translateY(-6px) scale(1.1); 
-    opacity: 0.9; 
+    transform: translateY(-2px) scale(1.03); 
+    opacity: 0.7; 
   }
 }

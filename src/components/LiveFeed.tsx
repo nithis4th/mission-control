@@ -113,7 +113,7 @@ export function LiveFeed({ expanded = false }: LiveFeedProps) {
   return (
     <aside
       className={`bg-mc-bg-secondary border-l border-mc-border flex flex-col transition-all duration-300 ease-in-out ${
-        isMinimized ? 'w-12' : 'w-80'
+        isMinimized ? 'w-12' : 'w-64'
       }`}
     >
       {/* Header */}

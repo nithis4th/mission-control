@@ -42,12 +42,20 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
           sessionsList = data.sessions;
         }
         
-        // Extract agent IDs from session keys (format: "agent:{agentId}:...")
+        // Extract agent IDs from sessions active in the last 30 minutes
+        const THIRTY_MIN_MS = 30 * 60 * 1000;
+        const now = Date.now();
         const activeIds = new Set<string>();
         for (const session of sessionsList) {
           const key = session.key || '';
           const match = key.match(/^agent:([^:]+):/);
-          if (match) {
+          if (!match) continue;
+
+          const updatedAtRaw = Number((session as { updatedAt?: number }).updatedAt || 0);
+          if (!updatedAtRaw) continue;
+          const updatedAtMs = updatedAtRaw < 1e12 ? updatedAtRaw * 1000 : updatedAtRaw;
+
+          if (now - updatedAtMs <= THIRTY_MIN_MS) {
             activeIds.add(match[1].toLowerCase());
           }
         }

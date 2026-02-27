@@ -16,13 +16,26 @@ async function getActiveAgentIds(): Promise<Set<string>> {
   try {
     const sessions = await listSessions();
     const activeIds = new Set<string>();
+    const THIRTY_MIN_MS = 30 * 60 * 1000;
+    const now = Date.now();
+
     for (const session of sessions) {
       const key = session.key || '';
       const match = key.match(/^agent:([^:]+):/);
-      if (match) {
+      if (!match) continue;
+
+      const updatedAtRaw = Number(session.updatedAt || 0);
+      if (!updatedAtRaw) continue;
+
+      // Gateway may return epoch seconds or milliseconds
+      const updatedAtMs = updatedAtRaw < 1e12 ? updatedAtRaw * 1000 : updatedAtRaw;
+      const isActiveWithinThreshold = now - updatedAtMs <= THIRTY_MIN_MS;
+
+      if (isActiveWithinThreshold) {
         activeIds.add(match[1].toLowerCase());
       }
     }
+
     return activeIds;
   } catch (error) {
     console.error('Failed to fetch live sessions for agent status:', error);

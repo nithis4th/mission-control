@@ -26,12 +26,13 @@ interface AgentConfig {
 }
 
 const AGENTS: AgentConfig[] = [
+  // Top cluster (facing desks)
   {
     name: 'Monalisa',
     label: 'Artist',
     color: '#db61a2',
-    seatX: 430, seatY: 135,
-    deskX: 380, deskY: 52, deskW: 110, deskH: 40,
+    seatX: 250, seatY: 138,
+    deskX: 190, deskY: 72, deskW: 120, deskH: 40,
     features: ['art-supplies'],
     emoji: '🎨',
   },
@@ -39,8 +40,8 @@ const AGENTS: AgentConfig[] = [
     name: 'Sherlock',
     label: 'CMO',
     color: '#3fb950',
-    seatX: 160, seatY: 195,
-    deskX: 100, deskY: 110, deskW: 120, deskH: 40,
+    seatX: 250, seatY: 228,
+    deskX: 190, deskY: 176, deskW: 120, deskH: 40,
     features: ['whiteboard'],
     emoji: '🔍',
   },
@@ -48,8 +49,8 @@ const AGENTS: AgentConfig[] = [
     name: 'Dexter',
     label: 'CTO',
     color: '#58a6ff',
-    seatX: 700, seatY: 195,
-    deskX: 635, deskY: 110, deskW: 130, deskH: 40,
+    seatX: 610, seatY: 138,
+    deskX: 545, deskY: 72, deskW: 130, deskH: 40,
     features: ['multi-monitor'],
     emoji: '🤖',
   },
@@ -57,17 +58,18 @@ const AGENTS: AgentConfig[] = [
     name: 'Eve',
     label: 'COO',
     color: '#a371f7',
-    seatX: 430, seatY: 310,
-    deskX: 360, deskY: 220, deskW: 140, deskH: 45,
+    seatX: 610, seatY: 228,
+    deskX: 540, deskY: 172, deskW: 140, deskH: 45,
     features: ['big-desk', 'nameplate'],
     emoji: '🧠',
   },
+  // Bottom cluster (facing desks)
   {
     name: 'Shelby',
     label: 'Strategist',
     color: '#d29922',
-    seatX: 160, seatY: 420,
-    deskX: 100, deskY: 335, deskW: 120, deskH: 40,
+    seatX: 250, seatY: 342,
+    deskX: 190, deskY: 276, deskW: 120, deskH: 40,
     features: ['charts'],
     emoji: '📊',
   },
@@ -75,8 +77,8 @@ const AGENTS: AgentConfig[] = [
     name: 'Bluma',
     label: 'CISO',
     color: '#f85149',
-    seatX: 700, seatY: 420,
-    deskX: 635, deskY: 335, deskW: 120, deskH: 40,
+    seatX: 250, seatY: 432,
+    deskX: 190, deskY: 380, deskW: 120, deskH: 40,
     features: ['security-monitor'],
     emoji: '🛡️',
   },
@@ -84,8 +86,8 @@ const AGENTS: AgentConfig[] = [
     name: 'Goku',
     label: 'Trainer',
     color: '#ff8c00',
-    seatX: 430, seatY: 500,
-    deskX: 380, deskY: 415, deskW: 100, deskH: 38,
+    seatX: 610, seatY: 342,
+    deskX: 560, deskY: 276, deskW: 100, deskH: 38,
     features: ['small-energetic'],
     emoji: '⚡',
   },
@@ -97,12 +99,12 @@ const CHAR_W = 14 * PX;
 const CHAR_H = 22 * PX;
 
 const LOUNGE_SEATS = [
-  { cx: 540, by: 522 },
-  { cx: 580, by: 522 },
-  { cx: 620, by: 522 },
-  { cx: 660, by: 522 },
-  { cx: 700, by: 522 },
-  { cx: 740, by: 522 },
+  { cx: 410, by: 510 },
+  { cx: 470, by: 510 },
+  { cx: 530, by: 510 },
+  { cx: 590, by: 510 },
+  { cx: 650, by: 510 },
+  { cx: 710, by: 510 },
 ];
 
 function Agent({
@@ -515,7 +517,7 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
   const standbyCount = agents.filter(a => a.status === 'standby').length;
 
   return (
-    <div className={`relative w-full h-full bg-mc-bg flex flex-col items-center ${compact ? "min-h-0" : "min-h-screen"}`}>
+    <div className={`relative w-full h-full bg-mc-bg flex flex-col ${compact ? "min-h-0" : "min-h-screen"}`}>
       {!compact && <div className="w-full flex items-center justify-between px-6 py-3 bg-mc-bg-secondary border-b border-mc-border">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🏢</span>
@@ -528,14 +530,12 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-mc-accent-yellow" />Standby</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-mc-accent-red" />Offline</span>
           </div>
-          <a href="/" className="text-sm text-mc-accent hover:text-mc-text transition-colors px-3 py-1 bg-mc-bg-tertiary rounded">
-            ← Dashboard
-          </a>
+
         </div>
       </div>}
 
-      <div className={`flex-1 flex items-center justify-center w-full ${compact ? "p-2" : "p-4"}`}>
-        <svg viewBox="0 0 860 580" className={`w-full border border-mc-border rounded-lg bg-[#0a0e14] ${compact ? "max-w-none h-full" : "max-w-5xl"}`} style={{ imageRendering: 'auto' }}>
+      <div className={`flex-1 w-full ${compact ? "p-0" : "p-2"}`}>
+        <svg viewBox="0 0 860 580" className={`w-full h-full border border-mc-border rounded-lg bg-[#0a0e14] ${compact ? "max-w-none" : ""}`} style={{ imageRendering: 'auto' }}>
           <defs>
             <pattern id="floor" width="40" height="40" patternUnits="userSpaceOnUse">
               <rect width="40" height="40" fill="#141a22" />
@@ -581,24 +581,24 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
 
           {!compact && (
           <g>
-            <rect x={500} y={455} width={310} height={108} rx={8} fill="#111923" stroke="#2a3544" strokeWidth={1.5} />
-            <rect x={512} y={468} width={210} height={18} rx={3} fill="#2f4c7d" />
-            <rect x={512} y={486} width={210} height={38} rx={4} fill="#3d66a3" />
-            {[528, 566, 604, 642, 680].map(x => <rect key={x} x={x} y={491} width={18} height={28} rx={2} fill="#4c79bb" />)}
-            <rect x={500} y={522} width={16} height={18} fill="#2f4c7d" />
-            <rect x={706} y={522} width={16} height={18} fill="#2f4c7d" />
+            <rect x={360} y={448} width={470} height={118} rx={10} fill="#111923" stroke="#2a3544" strokeWidth={1.5} />
+            <rect x={380} y={468} width={300} height={16} rx={3} fill="#2f4c7d" />
+            <rect x={380} y={484} width={300} height={44} rx={5} fill="#3d66a3" />
+            {[402, 448, 494, 540, 586, 632].map(x => <rect key={x} x={x} y={490} width={22} height={30} rx={2} fill="#4c79bb" />)}
+            <rect x={366} y={520} width={16} height={20} fill="#2f4c7d" />
+            <rect x={678} y={520} width={16} height={20} fill="#2f4c7d" />
 
-            <rect x={744} y={458} width={54} height={34} rx={3} fill="#111" stroke="#444" strokeWidth={1} />
-            <rect x={748} y={462} width={46} height={24} fill="#1d2b3a" />
-            <rect x={752} y={466} width={18} height={2} fill="#58a6ff" opacity={0.6} />
-            <rect x={752} y={470} width={28} height={2} fill="#39d353" opacity={0.6} />
-            <rect x={766} y={492} width={10} height={5} fill="#444" />
+            <rect x={708} y={460} width={62} height={38} rx={3} fill="#111" stroke="#444" strokeWidth={1} />
+            <rect x={712} y={464} width={54} height={26} fill="#1d2b3a" />
+            <rect x={716} y={468} width={20} height={2} fill="#58a6ff" opacity={0.6} />
+            <rect x={716} y={472} width={32} height={2} fill="#39d353" opacity={0.6} />
+            <rect x={731} y={496} width={12} height={5} fill="#444" />
 
-            <rect x={780} y={504} width={16} height={18} rx={2} fill="#6b4428" />
-            <circle cx={788} cy={500} r={8} fill="#2f7a3a" />
-            <circle cx={784} cy={497} r={5} fill="#3fb950" opacity={0.7} />
+            <rect x={786} y={504} width={18} height={20} rx={2} fill="#6b4428" />
+            <circle cx={795} cy={500} r={10} fill="#2f7a3a" />
+            <circle cx={790} cy={496} r={6} fill="#3fb950" opacity={0.7} />
 
-            <text x={516} y={450} fill="#8b949e" fontSize={8} fontFamily="monospace">LOUNGE · standby chill zone ({standbyCount})</text>
+            <text x={384} y={444} fill="#8b949e" fontSize={8} fontFamily="monospace">LOUNGE · standby chill zone ({standbyCount})</text>
           </g>
           )}
 
