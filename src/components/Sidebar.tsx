@@ -75,7 +75,6 @@ const navItems: NavItem[] = [
     label: 'Office',
     emoji: '🏢',
     icon: <Building2 className="w-3.5 h-3.5" />,
-    href: '/office',
   },
   {
     id: 'team',
