@@ -7,7 +7,6 @@ import {
   MessageSquare,
   BarChart3,
   ScrollText,
-  Building2,
   Brain,
   ChevronLeft,
   ChevronRight,
@@ -57,13 +56,6 @@ const navItems: NavItem[] = [
     label: 'Chat History',
     emoji: '📜',
     icon: <ScrollText className="w-3.5 h-3.5" />,
-  },
-  {
-    id: 'office',
-    label: 'Office',
-    emoji: '🏢',
-    icon: <Building2 className="w-3.5 h-3.5" />,
-    href: '/office',
   },
   {
     id: 'brain',
