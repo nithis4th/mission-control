@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, ChevronRight, GripVertical } from 'lucide-react';
+import { PixelOffice } from '@/components/PixelOffice';
 import { useMissionControl } from '@/lib/store';
 import { triggerAutoDispatch, shouldTriggerAutoDispatch } from '@/lib/auto-dispatch';
 import type { Task, TaskStatus } from '@/lib/types';
@@ -24,6 +25,7 @@ const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
 
 export function MissionQueue({ workspaceId }: MissionQueueProps) {
   const { tasks, updateTaskStatus, addEvent } = useMissionControl();
+  const [activeTab, setActiveTab] = useState<'queue' | 'office'>('queue');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -97,64 +99,100 @@ export function MissionQueue({ workspaceId }: MissionQueueProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-3 border-b border-mc-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ChevronRight className="w-4 h-4 text-mc-text-secondary" />
-          <span className="text-xs font-medium uppercase tracking-wider">Mission Queue</span>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-mc-accent-pink text-mc-bg rounded text-xs font-medium hover:bg-mc-accent-pink/90"
-        >
-          <Plus className="w-4 h-4" />
-          New Task
-        </button>
-      </div>
-
-      {/* Kanban Columns */}
-      <div className="flex-1 flex gap-3 p-3 overflow-x-auto">
-        {COLUMNS.map((column) => {
-          const columnTasks = getTasksByStatus(column.id);
-          return (
-            <div
-              key={column.id}
-              className={`flex-1 min-w-[220px] max-w-[300px] flex flex-col bg-mc-bg rounded-lg border border-mc-border/50 border-t-2 ${column.color}`}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, column.id)}
+      <div className="p-3 border-b border-mc-border flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <ChevronRight className="w-4 h-4 text-mc-text-secondary shrink-0" />
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-mc-bg-tertiary/60 border border-mc-border/60">
+            <button
+              type="button"
+              onClick={() => setActiveTab('queue')}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                activeTab === 'queue'
+                  ? 'bg-mc-bg text-mc-text'
+                  : 'text-mc-text-secondary hover:text-mc-text hover:bg-mc-bg/60'
+              }`}
             >
-              {/* Column Header */}
-              <div className="p-2 border-b border-mc-border flex items-center justify-between">
-                <span className="text-xs font-medium uppercase text-mc-text-secondary">
-                  {column.label}
-                </span>
-                <span className="text-xs bg-mc-bg-tertiary px-2 py-0.5 rounded text-mc-text-secondary">
-                  {columnTasks.length}
-                </span>
-              </div>
+              📋 Mission Queue
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('office')}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                activeTab === 'office'
+                  ? 'bg-mc-bg text-mc-text'
+                  : 'text-mc-text-secondary hover:text-mc-text hover:bg-mc-bg/60'
+              }`}
+            >
+              🎮 Pixel Office
+            </button>
+          </div>
+        </div>
 
-              {/* Tasks */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                {columnTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onDragStart={handleDragStart}
-                    onClick={() => setEditingTask(task)}
-                    isDragging={draggedTask?.id === task.id}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        {activeTab === 'queue' && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-mc-accent-pink text-mc-bg rounded text-xs font-medium hover:bg-mc-accent-pink/90 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            New Task
+          </button>
+        )}
       </div>
 
-      {/* Modals */}
-      {showCreateModal && (
-        <TaskModal onClose={() => setShowCreateModal(false)} workspaceId={workspaceId} />
-      )}
-      {editingTask && (
-        <TaskModal task={editingTask} onClose={() => setEditingTask(null)} workspaceId={workspaceId} />
+      {activeTab === 'queue' ? (
+        <>
+          {/* Kanban Columns */}
+          <div className="flex-1 min-h-0 flex gap-3 p-3 overflow-x-auto">
+            {COLUMNS.map((column) => {
+              const columnTasks = getTasksByStatus(column.id);
+              return (
+                <div
+                  key={column.id}
+                  className={`flex-1 min-w-[220px] max-w-[300px] flex flex-col bg-mc-bg rounded-lg border border-mc-border/50 border-t-2 ${column.color}`}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, column.id)}
+                >
+                  {/* Column Header */}
+                  <div className="p-2 border-b border-mc-border flex items-center justify-between">
+                    <span className="text-xs font-medium uppercase text-mc-text-secondary">
+                      {column.label}
+                    </span>
+                    <span className="text-xs bg-mc-bg-tertiary px-2 py-0.5 rounded text-mc-text-secondary">
+                      {columnTasks.length}
+                    </span>
+                  </div>
+
+                  {/* Tasks */}
+                  <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                    {columnTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onDragStart={handleDragStart}
+                        onClick={() => setEditingTask(task)}
+                        isDragging={draggedTask?.id === task.id}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Modals */}
+          {showCreateModal && (
+            <TaskModal onClose={() => setShowCreateModal(false)} workspaceId={workspaceId} />
+          )}
+          {editingTask && (
+            <TaskModal task={editingTask} onClose={() => setEditingTask(null)} workspaceId={workspaceId} />
+          )}
+        </>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-hidden p-3">
+          <div className="h-full overflow-hidden rounded border border-mc-border/60 bg-mc-bg-secondary/30">
+            <PixelOffice />
+          </div>
+        </div>
       )}
     </div>
   );
