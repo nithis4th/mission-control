@@ -15,6 +15,10 @@ import { SoulTab } from '@/components/tabs/SoulTab';
 import { CostTab } from '@/components/tabs/CostTab';
 import { CronTab } from '@/components/tabs/CronTab';
 import { SkillsTab } from '@/components/tabs/SkillsTab';
+import { TaskTab } from '@/components/tabs/TaskTab';
+import { ContentTab } from '@/components/tabs/ContentTab';
+import { DocTab } from '@/components/tabs/DocTab';
+import { ApprovalTab } from '@/components/tabs/ApprovalTab';
 import { useMissionControl } from '@/lib/store';
 import { useSSE } from '@/hooks/useSSE';
 import { debug } from '@/lib/debug';
@@ -285,8 +289,32 @@ export default function WorkspacePage() {
           </div>
         )}
 
-        {/* Fallback for comingSoon tabs not yet implemented */}
-        {['tasks', 'content', 'docs', 'approval', 'office'].includes(activeTab) && (
+        {activeTab === 'tasks' && (
+          <div className="flex-1 flex overflow-hidden">
+            <TaskTab />
+          </div>
+        )}
+
+        {activeTab === 'content' && (
+          <div className="flex-1 flex overflow-hidden">
+            <ContentTab />
+          </div>
+        )}
+
+        {activeTab === 'docs' && (
+          <div className="flex-1 flex overflow-hidden">
+            <DocTab />
+          </div>
+        )}
+
+        {activeTab === 'approval' && (
+          <div className="flex-1 flex overflow-hidden">
+            <ApprovalTab />
+          </div>
+        )}
+
+        {/* Fallback for remaining comingSoon tabs */}
+        {['office'].includes(activeTab) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center opacity-60">
               <div className="text-6xl mb-4">🚧</div>

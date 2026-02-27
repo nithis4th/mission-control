@@ -44,28 +44,24 @@ const navItems: NavItem[] = [
     label: 'Task',
     emoji: '📋',
     icon: <ClipboardList className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'content',
     label: 'Content',
     emoji: '📰',
     icon: <Newspaper className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'docs',
     label: 'Doc',
     emoji: '📄',
     icon: <FileText className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'approval',
     label: 'Approval',
     emoji: '✅',
     icon: <CheckSquare className="w-3.5 h-3.5" />,
-    comingSoon: true,
   },
   {
     id: 'office',

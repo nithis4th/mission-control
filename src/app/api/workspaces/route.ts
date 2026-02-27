@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
         };
         
         taskCounts.forEach(tc => {
-          counts[tc.status] = tc.count;
+          const key = tc.status as string;
+          if (key in counts) {
+            (counts as Record<string, number>)[key] = tc.count;
+          }
           counts.total += tc.count;
         });
         
