@@ -4,12 +4,23 @@ import { execSync } from 'child_process';
 export const dynamic = 'force-dynamic';
 
 const MODEL_PRICES: Record<string, { input: number; output: number }> = {
-  'claude-sonnet': { input: 3,    output: 15   },
-  'claude-opus':   { input: 15,   output: 75   },
-  'kimi':          { input: 0.15, output: 0.6  },
-  'gpt-5':         { input: 3,    output: 15   },
-  'gpt-4':         { input: 10,   output: 30   },
-  'gemini':        { input: 1.25, output: 5    },
+  'claude-sonnet-4-6':  { input: 3,    output: 15   },
+  'claude-sonnet-4-5':  { input: 3,    output: 15   },
+  'claude-sonnet':      { input: 3,    output: 15   },
+  'claude-opus-4.6':    { input: 15,   output: 75   },
+  'claude-opus-4':      { input: 15,   output: 75   },
+  'claude-opus':        { input: 15,   output: 75   },
+  'claude-haiku':       { input: 0.8,  output: 4    },
+  'kimi-k2.5':          { input: 0.15, output: 0.6  },
+  'kimi':               { input: 0.15, output: 0.6  },
+  'gpt-5.3-codex':      { input: 3,    output: 15   },
+  'gpt-5':              { input: 3,    output: 15   },
+  'gpt-4o-mini':        { input: 0.15, output: 0.6  },
+  'gpt-4o':             { input: 2.5,  output: 10   },
+  'minimax-m2.5':       { input: 0.05, output: 0.2  },
+  'minimax':            { input: 0.05, output: 0.2  },
+  'gemini-2.0-flash':   { input: 0.1,  output: 0.4  },
+  'gemini':             { input: 1.25, output: 5    },
 };
 
 function getPricing(model: string) {
@@ -44,7 +55,7 @@ export async function GET() {
   try {
     let rawOutput = '';
     try {
-      rawOutput = execSync('openclaw sessions --json 2>/dev/null', {
+      rawOutput = execSync('openclaw sessions --all-agents --json 2>/dev/null', {
         timeout: 10000,
         encoding: 'utf-8',
         env: { ...process.env, PATH: '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:' + (process.env.PATH || ''), OPENCLAW_GATEWAY_TOKEN: process.env.OPENCLAW_GATEWAY_TOKEN || '' },
