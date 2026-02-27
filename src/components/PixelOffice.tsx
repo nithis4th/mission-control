@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AgentStatus } from '@/lib/types';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 interface AgentData {
   id: string;
   name: string;
@@ -17,10 +15,8 @@ interface AgentConfig {
   name: string;
   label: string;
   color: string;
-  // Position of the agent character (center-bottom of sprite)
   seatX: number;
   seatY: number;
-  // Desk position
   deskX: number;
   deskY: number;
   deskW: number;
@@ -28,10 +24,6 @@ interface AgentConfig {
   features: string[];
   emoji: string;
 }
-
-// ─── Agent desk layout ───────────────────────────────────────────────────────
-//  Office is 860x560 SVG. Agents face "down" (toward viewer).
-//  seatX/seatY = where the character's feet are. Head is above.
 
 const AGENTS: AgentConfig[] = [
   {
@@ -100,13 +92,19 @@ const AGENTS: AgentConfig[] = [
 ];
 
 const DOOR = { x: 420, y: 555 };
+const PX = 3;
+const CHAR_W = 14 * PX;
+const CHAR_H = 22 * PX;
 
-// ─── Pixel sizes ─────────────────────────────────────────────────────────────
-const PX = 3; // each "pixel" is 3 SVG units
-const CHAR_W = 14 * PX; // 42
-const CHAR_H = 22 * PX; // 66
+const LOUNGE_SEATS = [
+  { cx: 540, by: 522 },
+  { cx: 580, by: 522 },
+  { cx: 620, by: 522 },
+  { cx: 660, by: 522 },
+  { cx: 700, by: 522 },
+  { cx: 740, by: 522 },
+];
 
-// ─── Draw a pixel-art character ──────────────────────────────────────────────
 function Agent({
   cx,
   bottomY,
@@ -116,8 +114,8 @@ function Agent({
   isWalking,
   isMini,
 }: {
-  cx: number; // center x
-  bottomY: number; // y of feet
+  cx: number;
+  bottomY: number;
   color: string;
   status: AgentStatus;
   name: string;
@@ -131,121 +129,117 @@ function Agent({
   const y = bottomY - h;
   const skin = '#ffd5b8';
 
-  return (
-    <g
-      className={isWalking ? 'pixel-walk' : status === 'working' ? 'pixel-typing' : 'pixel-idle'}
-    >
-      {/* Colored glow behind character for visibility */}
-      <ellipse cx={cx} cy={bottomY - h / 2} rx={w * 0.8} ry={h * 0.55} fill={color} opacity={0.12} filter="url(#glow)" />
+  const isSherlock = name === 'Sherlock';
+  const isMonalisa = name === 'Monalisa';
+  const isShelby = name === 'Shelby';
 
-      {/* Ground shadow */}
+  return (
+    <g className={isWalking ? 'pixel-walk' : status === 'working' ? 'pixel-typing' : 'pixel-idle'}>
+      <ellipse cx={cx} cy={bottomY - h / 2} rx={w * 0.8} ry={h * 0.55} fill={color} opacity={0.12} filter="url(#glow)" />
       <ellipse cx={cx} cy={bottomY + 2} rx={w * 0.4} ry={S * 1.5} fill="rgba(0,0,0,0.3)" />
 
-      {/* ── Hair ── */}
-      <rect x={x + 3 * S} y={y} width={8 * S} height={2 * S} fill={color} />
-      <rect x={x + 2 * S} y={y + S} width={10 * S} height={2 * S} fill={color} />
+      {/* Hair / Hat */}
+      {!isSherlock ? (
+        <>
+          <rect x={x + 3 * S} y={y} width={8 * S} height={2 * S} fill={isMonalisa ? '#5b3b2b' : color} />
+          <rect x={x + 2 * S} y={y + S} width={10 * S} height={2 * S} fill={isMonalisa ? '#6a4330' : color} />
+        </>
+      ) : (
+        <>
+          <rect x={x + 1 * S} y={y + 1 * S} width={12 * S} height={2 * S} fill="#3d2c1e" />
+          <rect x={x + 3 * S} y={y - S} width={8 * S} height={3 * S} fill="#4a3424" />
+          <rect x={x + 4 * S} y={y - 2 * S} width={6 * S} height={S} fill="#6e5139" />
+        </>
+      )}
 
-      {/* ── Head ── */}
       <rect x={x + 3 * S} y={y + 2 * S} width={8 * S} height={7 * S} fill={skin} />
-      {/* Eyes */}
       <rect x={x + 4 * S} y={y + 5 * S} width={2 * S} height={2 * S} fill="#222" className={status === 'working' ? 'pixel-blink' : ''} />
       <rect x={x + 8 * S} y={y + 5 * S} width={2 * S} height={2 * S} fill="#222" className={status === 'working' ? 'pixel-blink' : ''} />
-      {/* Eye highlights */}
       <rect x={x + 4 * S} y={y + 5 * S} width={S} height={S} fill="rgba(255,255,255,0.5)" />
       <rect x={x + 8 * S} y={y + 5 * S} width={S} height={S} fill="rgba(255,255,255,0.5)" />
-      {/* Mouth */}
       {status === 'working' ? (
         <rect x={x + 5 * S} y={y + 7.5 * S} width={4 * S} height={S} fill="#d4937a" rx={S * 0.3} />
       ) : (
         <rect x={x + 6 * S} y={y + 7.5 * S} width={2 * S} height={S * 0.6} fill="#c9846b" />
       )}
 
-      {/* ── Body / Shirt ── */}
-      <rect x={x + 2 * S} y={y + 9 * S} width={10 * S} height={7 * S} fill={color} />
-      {/* Highlight */}
-      <rect x={x + 3 * S} y={y + 9 * S} width={8 * S} height={S} fill="rgba(255,255,255,0.2)" />
+      {/* Body by outfit */}
+      {isMonalisa ? (
+        <>
+          <rect x={x + 2 * S} y={y + 9 * S} width={10 * S} height={5 * S} fill="#8b5e3c" />
+          <rect x={x + 1 * S} y={y + 14 * S} width={12 * S} height={6 * S} fill="#6f4a30" />
+          <rect x={x + 2 * S} y={y + 15 * S} width={10 * S} height={S} fill="#9a6a45" opacity={0.5} />
+        </>
+      ) : isShelby ? (
+        <>
+          <rect x={x + 2 * S} y={y + 9 * S} width={10 * S} height={7 * S} fill="#2f5fa9" />
+          <rect x={x + 6 * S} y={y + 9 * S} width={2 * S} height={7 * S} fill="#dbe8ff" />
+          <rect x={x + 5 * S} y={y + 10 * S} width={4 * S} height={2 * S} fill="#1f3f71" />
+        </>
+      ) : isSherlock ? (
+        <>
+          <rect x={x + 2 * S} y={y + 9 * S} width={10 * S} height={7 * S} fill="#5b4635" />
+          <rect x={x + 4 * S} y={y + 9 * S} width={6 * S} height={7 * S} fill="#6d5541" />
+          <rect x={x + 6 * S} y={y + 10 * S} width={2 * S} height={6 * S} fill="#d9c5a5" />
+        </>
+      ) : (
+        <>
+          <rect x={x + 2 * S} y={y + 9 * S} width={10 * S} height={7 * S} fill={color} />
+          <rect x={x + 3 * S} y={y + 9 * S} width={8 * S} height={S} fill="rgba(255,255,255,0.2)" />
+        </>
+      )}
 
-      {/* ── Arms ── */}
-      <rect x={x} y={y + 10 * S} width={2 * S} height={5 * S} fill={color}
+      <rect x={x} y={y + 10 * S} width={2 * S} height={5 * S} fill={isSherlock ? '#5b4635' : isShelby ? '#2f5fa9' : color}
         className={status === 'working' ? 'pixel-arm-left' : ''} />
-      <rect x={x + 12 * S} y={y + 10 * S} width={2 * S} height={5 * S} fill={color}
+      <rect x={x + 12 * S} y={y + 10 * S} width={2 * S} height={5 * S} fill={isSherlock ? '#5b4635' : isShelby ? '#2f5fa9' : color}
         className={status === 'working' ? 'pixel-arm-right' : ''} />
-      {/* Hands */}
-      <rect x={x} y={y + 14 * S} width={2 * S} height={2 * S} fill={skin}
-        className={status === 'working' ? 'pixel-arm-left' : ''} />
-      <rect x={x + 12 * S} y={y + 14 * S} width={2 * S} height={2 * S} fill={skin}
-        className={status === 'working' ? 'pixel-arm-right' : ''} />
+      <rect x={x} y={y + 14 * S} width={2 * S} height={2 * S} fill={skin} className={status === 'working' ? 'pixel-arm-left' : ''} />
+      <rect x={x + 12 * S} y={y + 14 * S} width={2 * S} height={2 * S} fill={skin} className={status === 'working' ? 'pixel-arm-right' : ''} />
 
-      {/* ── Legs ── */}
-      <rect x={x + 3 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill="#3d4450"
-        className={isWalking ? 'pixel-leg-left' : ''} />
-      <rect x={x + 8 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill="#3d4450"
-        className={isWalking ? 'pixel-leg-right' : ''} />
-      {/* Shoes */}
-      <rect x={x + 2 * S} y={y + 20 * S} width={4 * S} height={2 * S} fill="#222"
-        className={isWalking ? 'pixel-leg-left' : ''} />
-      <rect x={x + 8 * S} y={y + 20 * S} width={4 * S} height={2 * S} fill="#222"
-        className={isWalking ? 'pixel-leg-right' : ''} />
+      <rect x={x + 3 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill="#3d4450" className={isWalking ? 'pixel-leg-left' : ''} />
+      <rect x={x + 8 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill="#3d4450" className={isWalking ? 'pixel-leg-right' : ''} />
+      <rect x={x + 2 * S} y={y + 20 * S} width={4 * S} height={2 * S} fill="#222" className={isWalking ? 'pixel-leg-left' : ''} />
+      <rect x={x + 8 * S} y={y + 20 * S} width={4 * S} height={2 * S} fill="#222" className={isWalking ? 'pixel-leg-right' : ''} />
 
-      {/* ── Name Badge ── */}
       {!isMini ? (
         <g>
-          <rect x={cx - 34} y={y - 20} width={68} height={17} rx={4}
-            fill="rgba(13,17,23,0.95)" stroke={color} strokeWidth={1.5} />
-          <text x={cx} y={y - 8} textAnchor="middle" fill={color}
-            fontSize={11} fontFamily="'JetBrains Mono', monospace" fontWeight="bold">
+          <rect x={cx - 34} y={y - 20} width={68} height={17} rx={4} fill="rgba(13,17,23,0.95)" stroke={color} strokeWidth={1.5} />
+          <text x={cx} y={y - 8} textAnchor="middle" fill={color} fontSize={11} fontFamily="'JetBrains Mono', monospace" fontWeight="bold">
             {name}
           </text>
         </g>
       ) : (
         <g>
-          <rect x={cx - 28} y={y - 14} width={56} height={13} rx={3}
-            fill="rgba(13,17,23,0.95)" stroke="#39d353" strokeWidth={1} />
-          <text x={cx} y={y - 4} textAnchor="middle" fill="#39d353"
-            fontSize={8} fontFamily="'JetBrains Mono', monospace">
+          <rect x={cx - 28} y={y - 14} width={56} height={13} rx={3} fill="rgba(13,17,23,0.95)" stroke="#39d353" strokeWidth={1} />
+          <text x={cx} y={y - 4} textAnchor="middle" fill="#39d353" fontSize={8} fontFamily="'JetBrains Mono', monospace">
             sub-agent
           </text>
         </g>
       )}
 
-      {/* ── Status Dot ── */}
-      <circle cx={cx + w / 2 + 4} cy={y + 4} r={4.5}
-        fill={status === 'working' ? '#3fb950' : status === 'standby' ? '#d29922' : '#f85149'}
-        className={status === 'working' ? 'pixel-pulse' : ''} />
+      <circle cx={cx + w / 2 + 4} cy={y + 4} r={4.5} fill={status === 'working' ? '#3fb950' : status === 'standby' ? '#d29922' : '#f85149'} className={status === 'working' ? 'pixel-pulse' : ''} />
       {status === 'working' && (
-        <circle cx={cx + w / 2 + 4} cy={y + 4} r={8}
-          fill="none" stroke="#3fb950" strokeWidth={1} opacity={0.3}
-          className="pixel-pulse" />
+        <circle cx={cx + w / 2 + 4} cy={y + 4} r={8} fill="none" stroke="#3fb950" strokeWidth={1} opacity={0.3} className="pixel-pulse" />
       )}
     </g>
   );
 }
 
-// ─── Desk + Chair + Decorations ──────────────────────────────────────────────
 function Desk({ agent, status }: { agent: AgentConfig; status: AgentStatus }) {
   const { deskX: dx, deskY: dy, deskW: dw, deskH: dh, seatX, seatY, color, features } = agent;
 
   return (
     <g>
-      {/* ── Desk surface ── */}
-      <rect x={dx} y={dy} width={dw} height={dh} rx={3}
-        fill="#3d3122" stroke="#5a4a32" strokeWidth={2} />
-      <rect x={dx + 2} y={dy + 2} width={dw - 4} height={4}
-        fill="#5a4a32" opacity={0.5} />
-      {/* Legs */}
+      <rect x={dx} y={dy} width={dw} height={dh} rx={3} fill="#3d3122" stroke="#5a4a32" strokeWidth={2} />
+      <rect x={dx + 2} y={dy + 2} width={dw - 4} height={4} fill="#5a4a32" opacity={0.5} />
       <rect x={dx + 5} y={dy + dh} width={4} height={8} fill="#3d3122" />
       <rect x={dx + dw - 9} y={dy + dh} width={4} height={8} fill="#3d3122" />
 
-      {/* ── Monitor(s) ── */}
       {features.includes('multi-monitor') ? (
-        // Triple monitors for Dexter
         [0, 30, 60].map((off, i) => (
           <g key={i}>
-            <rect x={dx + 10 + off} y={dy - 24} width={26} height={22} rx={2}
-              fill="#161b22" stroke="#30363d" strokeWidth={1} />
-            <rect x={dx + 12 + off} y={dy - 22} width={22} height={16}
-              fill={status === 'working' ? '#0d3320' : '#0d1117'}
-              className={status === 'working' ? 'pixel-screen-glow' : ''} />
+            <rect x={dx + 10 + off} y={dy - 24} width={26} height={22} rx={2} fill="#161b22" stroke="#30363d" strokeWidth={1} />
+            <rect x={dx + 12 + off} y={dy - 22} width={22} height={16} fill={status === 'working' ? '#0d3320' : '#0d1117'} className={status === 'working' ? 'pixel-screen-glow' : ''} />
             {status === 'working' && (
               <>
                 <rect x={dx + 14 + off} y={dy - 20} width={14} height={1.5} fill="#3fb950" opacity={0.6} className="pixel-code-line" />
@@ -257,13 +251,9 @@ function Desk({ agent, status }: { agent: AgentConfig; status: AgentStatus }) {
           </g>
         ))
       ) : (
-        // Single monitor
         <g>
-          <rect x={dx + dw / 2 - 18} y={dy - 26} width={36} height={24} rx={2}
-            fill="#161b22" stroke="#30363d" strokeWidth={1} />
-          <rect x={dx + dw / 2 - 16} y={dy - 24} width={32} height={18}
-            fill={status === 'working' ? '#0d3320' : '#0d1117'}
-            className={status === 'working' ? 'pixel-screen-glow' : ''} />
+          <rect x={dx + dw / 2 - 18} y={dy - 26} width={36} height={24} rx={2} fill="#161b22" stroke="#30363d" strokeWidth={1} />
+          <rect x={dx + dw / 2 - 16} y={dy - 24} width={32} height={18} fill={status === 'working' ? '#0d3320' : '#0d1117'} className={status === 'working' ? 'pixel-screen-glow' : ''} />
           {status === 'working' && (
             <>
               <rect x={dx + dw / 2 - 14} y={dy - 22} width={18} height={1.5} fill="#3fb950" opacity={0.6} className="pixel-code-line" />
@@ -275,7 +265,6 @@ function Desk({ agent, status }: { agent: AgentConfig; status: AgentStatus }) {
         </g>
       )}
 
-      {/* ── Feature decorations ── */}
       {features.includes('whiteboard') && (
         <g>
           <rect x={dx + dw + 10} y={dy - 16} width={32} height={42} rx={2} fill="#ececec" stroke="#ccc" strokeWidth={1} />
@@ -322,22 +311,15 @@ function Desk({ agent, status }: { agent: AgentConfig; status: AgentStatus }) {
 
       {features.includes('big-desk') && (
         <g>
-          {/* Coffee mug */}
           <rect x={dx + dw - 18} y={dy + 8} width={10} height={12} rx={2} fill="#8b949e" />
           <rect x={dx + dw - 8} y={dy + 10} width={4} height={8} rx={2} fill="none" stroke="#8b949e" strokeWidth={1} />
-          {/* Nameplate */}
           <rect x={dx + 8} y={dy + 8} width={34} height={12} rx={1} fill="#d4af37" />
           <text x={dx + 13} y={dy + 17} fill="#1a1a1a" fontSize={7} fontFamily="monospace" fontWeight="bold">EVE</text>
         </g>
       )}
 
-      {/* ── Office chair ── */}
-      <rect x={seatX - 14} y={seatY - 8} width={28} height={22} rx={5}
-        fill="#21262d" stroke="#30363d" strokeWidth={1} />
-      {/* Chair back */}
-      <rect x={seatX - 12} y={seatY - 18} width={24} height={12} rx={4}
-        fill="#282e36" stroke="#30363d" strokeWidth={1} />
-      {/* Chair stem + wheels */}
+      <rect x={seatX - 14} y={seatY - 8} width={28} height={22} rx={5} fill="#21262d" stroke="#30363d" strokeWidth={1} />
+      <rect x={seatX - 12} y={seatY - 18} width={24} height={12} rx={4} fill="#282e36" stroke="#30363d" strokeWidth={1} />
       <rect x={seatX - 2} y={seatY + 14} width={4} height={6} fill="#30363d" />
       <circle cx={seatX - 8} cy={seatY + 22} r={2.5} fill="#30363d" />
       <circle cx={seatX + 8} cy={seatY + 22} r={2.5} fill="#30363d" />
@@ -345,19 +327,15 @@ function Desk({ agent, status }: { agent: AgentConfig; status: AgentStatus }) {
   );
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
-
 export function PixelOffice() {
   const [agents, setAgents] = useState<AgentData[]>([]);
   const [positions, setPositions] = useState<Map<string, { cx: number; by: number }>>(new Map());
   const [walking, setWalking] = useState<Set<string>>(new Set());
-  const [seated, setSeated] = useState<Set<string>>(new Set());
   const [hasSubagents, setHasSubagents] = useState(false);
   const [subPos, setSubPos] = useState({ cx: DOOR.x, by: DOOR.y });
   const [subWalking, setSubWalking] = useState(false);
   const animStarted = useRef(false);
 
-  // Fetch
   const fetchAgents = useCallback(async () => {
     try {
       const res = await fetch('/api/agents');
@@ -370,9 +348,7 @@ export function PixelOffice() {
       const res = await fetch('/api/openclaw/sessions?session_type=subagent&status=active');
       if (res.ok) {
         const sessions = await res.json();
-        setHasSubagents(sessions.some(
-          (s: { label?: string }) => s.label?.includes('dexter')
-        ));
+        setHasSubagents(sessions.some((s: { label?: string }) => s.label?.includes('dexter')));
       }
     } catch {}
   }, []);
@@ -384,12 +360,35 @@ export function PixelOffice() {
     return () => clearInterval(iv);
   }, [fetchAgents, fetchSubagents]);
 
-  // Walk-in animation
+  const getStatus = useCallback((name: string): AgentStatus => (
+    agents.find(a => a.name.toLowerCase() === name.toLowerCase())?.status || 'offline'
+  ), [agents]);
+
+  const getTargetPositions = useCallback(() => {
+    const standbyAgents = AGENTS.filter(agent => getStatus(agent.name) === 'standby');
+    const standbySeatByName = new Map<string, { cx: number; by: number }>();
+
+    standbyAgents.forEach((agent, idx) => {
+      const seat = LOUNGE_SEATS[idx % LOUNGE_SEATS.length];
+      standbySeatByName.set(agent.name, seat);
+    });
+
+    const target = new Map<string, { cx: number; by: number }>();
+    AGENTS.forEach(agent => {
+      const status = getStatus(agent.name);
+      if (status === 'standby') {
+        target.set(agent.name, standbySeatByName.get(agent.name) || { cx: agent.seatX, by: agent.seatY });
+      } else {
+        target.set(agent.name, { cx: agent.seatX, by: agent.seatY });
+      }
+    });
+    return target;
+  }, [getStatus]);
+
   useEffect(() => {
     if (agents.length === 0 || animStarted.current) return;
     animStarted.current = true;
 
-    // Start everyone at the door
     const init = new Map<string, { cx: number; by: number }>();
     const allWalk = new Set<string>();
     AGENTS.forEach(a => {
@@ -399,47 +398,100 @@ export function PixelOffice() {
     setPositions(init);
     setWalking(allWalk);
 
-    // Animate each agent to their seat with stagger
+    const targets = getTargetPositions();
+
     AGENTS.forEach((agent, idx) => {
       const delay = idx * 350;
       const dur = 1800;
       const t0 = performance.now() + delay;
-      const tx = agent.seatX;
-      const ty = agent.seatY;
+      const target = targets.get(agent.name) || { cx: agent.seatX, by: agent.seatY };
 
       const step = (now: number) => {
         const elapsed = now - t0;
         if (elapsed < 0) { requestAnimationFrame(step); return; }
         const p = Math.min(elapsed / dur, 1);
-        const e = 1 - Math.pow(1 - p, 3); // ease-out
+        const e = 1 - Math.pow(1 - p, 3);
 
         setPositions(prev => {
           const next = new Map(prev);
           next.set(agent.name, {
-            cx: DOOR.x + (tx - DOOR.x) * e,
-            by: DOOR.y + (ty - DOOR.y) * e,
+            cx: DOOR.x + (target.cx - DOOR.x) * e,
+            by: DOOR.y + (target.by - DOOR.y) * e,
           });
+          return next;
+        });
+
+        if (p < 1) requestAnimationFrame(step);
+        else setWalking(prev => {
+          const n = new Set(prev);
+          n.delete(agent.name);
+          return n;
+        });
+      };
+      requestAnimationFrame(step);
+    });
+  }, [agents, getTargetPositions]);
+
+  useEffect(() => {
+    if (!animStarted.current || positions.size === 0) return;
+
+    const targets = getTargetPositions();
+
+    AGENTS.forEach((agent, idx) => {
+      const current = positions.get(agent.name);
+      const target = targets.get(agent.name);
+      if (!current || !target) return;
+
+      const dist = Math.hypot(target.cx - current.cx, target.by - current.by);
+      if (dist < 1) return;
+
+      const delay = idx * 60;
+      const dur = 1100;
+      const t0 = performance.now() + delay;
+
+      setWalking(prev => new Set(prev).add(agent.name));
+
+      const step = (now: number) => {
+        const elapsed = now - t0;
+        if (elapsed < 0) { requestAnimationFrame(step); return; }
+        const p = Math.min(elapsed / dur, 1);
+        const e = 1 - Math.pow(1 - p, 3);
+
+        setPositions(prev => {
+          const pos = prev.get(agent.name) || current;
+          const next = new Map(prev);
+          next.set(agent.name, {
+            cx: pos.cx + (target.cx - pos.cx) * e * 0.2,
+            by: pos.by + (target.by - pos.by) * e * 0.2,
+          });
+
+          if (p >= 1) next.set(agent.name, target);
           return next;
         });
 
         if (p < 1) {
           requestAnimationFrame(step);
         } else {
-          setWalking(prev => { const n = new Set(prev); n.delete(agent.name); return n; });
-          setSeated(prev => new Set(prev).add(agent.name));
+          setWalking(prev => {
+            const n = new Set(prev);
+            n.delete(agent.name);
+            return n;
+          });
         }
       };
+
       requestAnimationFrame(step);
     });
-  }, [agents]);
+  }, [agents, getTargetPositions, positions]);
 
-  // Subagent walk-in
   useEffect(() => {
     if (!hasSubagents) { setSubWalking(false); return; }
     setSubWalking(true);
     setSubPos({ cx: DOOR.x, by: DOOR.y });
 
-    const dexter = AGENTS.find(a => a.name === 'Dexter')!;
+    const dexter = AGENTS.find(a => a.name === 'Dexter');
+    if (!dexter) return;
+
     const tx = dexter.seatX + 45;
     const ty = dexter.seatY + 5;
     const t0 = performance.now() + 500;
@@ -460,12 +512,10 @@ export function PixelOffice() {
     requestAnimationFrame(step);
   }, [hasSubagents]);
 
-  const getStatus = (name: string): AgentStatus =>
-    agents.find(a => a.name.toLowerCase() === name.toLowerCase())?.status || 'offline';
+  const standbyCount = agents.filter(a => a.status === 'standby').length;
 
   return (
     <div className="relative w-full h-full min-h-screen bg-mc-bg flex flex-col items-center">
-      {/* Header */}
       <div className="w-full flex items-center justify-between px-6 py-3 bg-mc-bg-secondary border-b border-mc-border">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🏢</span>
@@ -484,10 +534,8 @@ export function PixelOffice() {
         </div>
       </div>
 
-      {/* Office SVG */}
       <div className="flex-1 flex items-center justify-center p-4 w-full">
-        <svg viewBox="0 0 860 580" className="w-full max-w-5xl border border-mc-border rounded-lg bg-[#0a0e14]"
-          style={{ imageRendering: 'auto' }}>
+        <svg viewBox="0 0 860 580" className="w-full max-w-5xl border border-mc-border rounded-lg bg-[#0a0e14]" style={{ imageRendering: 'auto' }}>
           <defs>
             <pattern id="floor" width="40" height="40" patternUnits="userSpaceOnUse">
               <rect width="40" height="40" fill="#141a22" />
@@ -497,29 +545,23 @@ export function PixelOffice() {
             <filter id="glow"><feGaussianBlur stdDeviation="3" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           </defs>
 
-          {/* Floor */}
           <rect width="860" height="580" fill="url(#floor)" />
 
-          {/* Walls */}
           <rect width="860" height="6" fill="#30363d" />
           <rect width="6" height="580" fill="#30363d" />
           <rect x="854" width="6" height="580" fill="#30363d" />
           <rect y="574" width="860" height="6" fill="#30363d" />
 
-          {/* Door */}
           <rect x={DOOR.x - 22} y="536" width="52" height="40" fill="#3d3122" rx={2} />
           <rect x={DOOR.x - 18} y="540" width="44" height="34" fill="#0d1117" />
           <circle cx={DOOR.x + 24} cy="557" r={2.5} fill="#d4af37" />
           <text x={DOOR.x} y="534" fill="#8b949e" fontSize={8} fontFamily="monospace" textAnchor="middle">ENTRANCE</text>
 
-          {/* Company sign */}
           <rect x="340" y="10" width="180" height="26" rx={5} fill="#161b22" stroke="#58a6ff" strokeWidth={1.2} />
-          <text x="430" y="28" textAnchor="middle" fill="#58a6ff" fontSize={12}
-            fontFamily="'JetBrains Mono', monospace" fontWeight="bold" filter="url(#glow)">
+          <text x="430" y="28" textAnchor="middle" fill="#58a6ff" fontSize={12} fontFamily="'JetBrains Mono', monospace" fontWeight="bold" filter="url(#glow)">
             MAYAKATI HQ
           </text>
 
-          {/* Ceiling lights */}
           {[160, 430, 700].map((lx, i) => (
             <g key={`l${i}`}>
               <rect x={lx - 16} y={8} width={32} height={4} rx={1} fill="#30363d" />
@@ -528,7 +570,6 @@ export function PixelOffice() {
             </g>
           ))}
 
-          {/* Plants */}
           {[{x:30,y:45},{x:815,y:45},{x:30,y:490},{x:815,y:490}].map((p,i) => (
             <g key={`p${i}`}>
               <rect x={p.x-7} y={p.y+12} width={14} height={16} rx={2} fill="#5a3825" />
@@ -538,52 +579,60 @@ export function PixelOffice() {
             </g>
           ))}
 
-          {/* Water cooler */}
+          {/* Lounge area */}
+          <g>
+            <rect x={500} y={455} width={310} height={108} rx={8} fill="#111923" stroke="#2a3544" strokeWidth={1.5} />
+            <rect x={512} y={468} width={210} height={18} rx={3} fill="#2f4c7d" />
+            <rect x={512} y={486} width={210} height={38} rx={4} fill="#3d66a3" />
+            {[528, 566, 604, 642, 680].map(x => <rect key={x} x={x} y={491} width={18} height={28} rx={2} fill="#4c79bb" />)}
+            <rect x={500} y={522} width={16} height={18} fill="#2f4c7d" />
+            <rect x={706} y={522} width={16} height={18} fill="#2f4c7d" />
+
+            <rect x={744} y={458} width={54} height={34} rx={3} fill="#111" stroke="#444" strokeWidth={1} />
+            <rect x={748} y={462} width={46} height={24} fill="#1d2b3a" />
+            <rect x={752} y={466} width={18} height={2} fill="#58a6ff" opacity={0.6} />
+            <rect x={752} y={470} width={28} height={2} fill="#39d353" opacity={0.6} />
+            <rect x={766} y={492} width={10} height={5} fill="#444" />
+
+            <rect x={780} y={504} width={16} height={18} rx={2} fill="#6b4428" />
+            <circle cx={788} cy={500} r={8} fill="#2f7a3a" />
+            <circle cx={784} cy={497} r={5} fill="#3fb950" opacity={0.7} />
+
+            <text x={516} y={450} fill="#8b949e" fontSize={8} fontFamily="monospace">LOUNGE · standby chill zone ({standbyCount})</text>
+          </g>
+
           <rect x={785} y={250} width={18} height={32} rx={2} fill="#4a6fa5" />
           <rect x={787} y={240} width={14} height={12} rx={7} fill="#a8d0f0" opacity={0.5} />
 
-          {/* ═══ LAYER 1: Desks + Chairs (behind agents) ═══ */}
           {AGENTS.map(a => <Desk key={`d-${a.name}`} agent={a} status={getStatus(a.name)} />)}
 
-          {/* ═══ LAYER 2: Agent Characters (in front) ═══ */}
           {AGENTS.map(a => {
             const pos = positions.get(a.name);
             if (!pos) return null;
             return (
-              <Agent key={a.name}
-                cx={pos.cx} bottomY={pos.by}
-                color={a.color} status={getStatus(a.name)}
-                name={a.name} isWalking={walking.has(a.name)} />
+              <Agent key={a.name} cx={pos.cx} bottomY={pos.by} color={a.color} status={getStatus(a.name)} name={a.name} isWalking={walking.has(a.name)} />
             );
           })}
 
-          {/* Subagent */}
           {hasSubagents && (
-            <Agent cx={subPos.cx} bottomY={subPos.by}
-              color="#39d353" status="working" name="helper"
-              isWalking={subWalking} isMini />
+            <Agent cx={subPos.cx} bottomY={subPos.by} color="#39d353" status="working" name="helper" isWalking={subWalking} isMini />
           )}
 
-          {/* ═══ LAYER 3: Status Indicators ═══ */}
           {AGENTS.map(a => {
             const st = getStatus(a.name);
-            if (!seated.has(a.name)) return null;
+            const pos = positions.get(a.name);
+            if (!pos) return null;
 
             if (st === 'working') {
               return (
-                <text key={`t-${a.name}`}
-                  x={a.seatX + CHAR_W / 2 + 12} y={a.seatY - CHAR_H + 10}
-                  fill={a.color} fontSize={9} fontFamily="monospace"
-                  opacity={0.8} className="pixel-typing-indicator" filter="url(#glow)">
+                <text key={`t-${a.name}`} x={pos.cx + CHAR_W / 2 + 12} y={pos.by - CHAR_H + 10} fill={a.color} fontSize={9} fontFamily="monospace" opacity={0.8} className="pixel-typing-indicator" filter="url(#glow)">
                   ⌨️ clack
                 </text>
               );
             }
             if (st === 'standby') {
               return (
-                <text key={`z-${a.name}`}
-                  x={a.seatX + CHAR_W / 2 + 8} y={a.seatY - CHAR_H + 5}
-                  fill="#8b949e" fontSize={16} className="pixel-zzz">
+                <text key={`z-${a.name}`} x={pos.cx + CHAR_W / 2 + 8} y={pos.by - CHAR_H + 5} fill="#8b949e" fontSize={16} className="pixel-zzz">
                   💤
                 </text>
               );
@@ -593,11 +642,10 @@ export function PixelOffice() {
         </svg>
       </div>
 
-      {/* Bottom bar */}
       <div className="w-full px-6 py-2 bg-mc-bg-secondary border-t border-mc-border flex items-center justify-between text-xs text-mc-text-secondary">
         <div className="flex items-center gap-4">
           <span>👥 {agents.filter(a => a.status === 'working').length} working</span>
-          <span>😴 {agents.filter(a => a.status === 'standby').length} standby</span>
+          <span>😴 {standbyCount} standby</span>
           <span>⛔ {agents.filter(a => a.status === 'offline').length} offline</span>
           {hasSubagents && <span className="text-mc-accent-green">🤖 Dexter has active sub-agents</span>}
         </div>
