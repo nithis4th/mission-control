@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { listSessions } from '@/lib/openclaw/gateway-http';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/openclaw/status - Check OpenClaw connection status
 export async function GET() {
   const gatewayUrl = (process.env.OPENCLAW_GATEWAY_URL || 'ws://127.0.0.1:18789')

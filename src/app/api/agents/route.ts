@@ -5,6 +5,9 @@ import { readAllAgentFiles } from '@/lib/workspace';
 import { listSessions } from '@/lib/openclaw/gateway-http';
 import type { Agent, AgentStatus, CreateAgentRequest } from '@/lib/types';
 
+// Ensure this route is always dynamic (never cached by Next.js)
+export const dynamic = 'force-dynamic';
+
 /**
  * Extract active agent IDs from live Gateway sessions.
  * Session key format: "agent:{agentId}:..."

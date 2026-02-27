@@ -23,6 +23,7 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
   const [activeSubAgents, setActiveSubAgents] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
   const [liveAgentIds, setLiveAgentIds] = useState<Set<string>>(new Set());
+  const [liveSessionsLoaded, setLiveSessionsLoaded] = useState(false);
 
   const toggleMinimize = () => setIsMinimized(!isMinimized);
 
@@ -51,6 +52,7 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
           }
         }
         setLiveAgentIds(activeIds);
+        setLiveSessionsLoaded(true);
         setActiveSubAgents(
           sessionsList.filter(s => (s.key || '').includes(':subagent:')).length
         );
@@ -123,13 +125,17 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
 
   // Derive real status from live Gateway sessions
   const getAgentLiveStatus = useCallback((agent: Agent): AgentStatus => {
-    // Check if agent has active sessions in Gateway
+    // Before first poll completes, use the server-derived status from /api/agents
+    if (!liveSessionsLoaded) {
+      return agent.status || 'standby';
+    }
+    // After polling, check if agent has active sessions in Gateway
     const agentId = (agent.gateway_agent_id || agent.name || '').toLowerCase();
     if (agentId && liveAgentIds.has(agentId)) {
       return 'working';
     }
     return 'standby';
-  }, [liveAgentIds]);
+  }, [liveAgentIds, liveSessionsLoaded]);
 
   const filteredAgents = agents.filter((agent) => {
     if (filter === 'all') return true;

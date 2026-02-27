@@ -3,6 +3,9 @@ import { listSessions } from '@/lib/openclaw/gateway-http';
 import { queryAll } from '@/lib/db';
 import type { OpenClawSession } from '@/lib/types';
 
+// Ensure this route is always dynamic (never cached by Next.js)
+export const dynamic = 'force-dynamic';
+
 // GET /api/openclaw/sessions - List OpenClaw sessions
 export async function GET(request: NextRequest) {
   try {

@@ -50,6 +50,7 @@ export async function invokeTool<T = unknown>(
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify(body),
+    cache: 'no-store',
   });
 
   if (!res.ok) {
@@ -180,6 +181,7 @@ export async function chatCompletions(
       'x-openclaw-agent-id': agentId,
     },
     body: JSON.stringify(body),
+    cache: 'no-store',
   });
 
   if (!res.ok) {
@@ -216,6 +218,7 @@ export async function sendToSession(
       'x-openclaw-session-key': sessionKey,
     },
     body: JSON.stringify(body),
+    cache: 'no-store',
   });
 
   if (!res.ok) {
