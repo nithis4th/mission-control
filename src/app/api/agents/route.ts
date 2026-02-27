@@ -2,7 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { queryAll, queryOne, run } from '@/lib/db';
 import { readAllAgentFiles } from '@/lib/workspace';
-import type { Agent, CreateAgentRequest } from '@/lib/types';
+import { listSessions } from '@/lib/openclaw/gateway-http';
+import type { Agent, AgentStatus, CreateAgentRequest } from '@/lib/types';
+
+/**
+ * Extract active agent IDs from live Gateway sessions.
+ * Session key format: "agent:{agentId}:..."
+ */
+async function getActiveAgentIds(): Promise<Set<string>> {
+  try {
+    const sessions = await listSessions();
+    const activeIds = new Set<string>();
+    for (const session of sessions) {
+      const key = session.key || '';
+      const match = key.match(/^agent:([^:]+):/);
+      if (match) {
+        activeIds.add(match[1].toLowerCase());
+      }
+    }
+    return activeIds;
+  } catch (error) {
+    console.error('Failed to fetch live sessions for agent status:', error);
+    return new Set();
+  }
+}
 
 // GET /api/agents - List all agents
 export async function GET(request: NextRequest) {
@@ -20,13 +43,24 @@ export async function GET(request: NextRequest) {
       `);
     }
 
-    // Overlay workspace files for gateway agents
+    // Fetch live Gateway sessions to determine real agent status
+    const activeAgentIds = await getActiveAgentIds();
+
+    // Overlay workspace files + enrich status from live sessions
     for (const agent of agents) {
       if (agent.gateway_agent_id) {
         const files = readAllAgentFiles(agent.gateway_agent_id);
         if (files.soul_md !== null) agent.soul_md = files.soul_md;
         if (files.user_md !== null) agent.user_md = files.user_md;
         if (files.agents_md !== null) agent.agents_md = files.agents_md;
+      }
+
+      // Derive live status from Gateway sessions
+      const agentKey = (agent.gateway_agent_id || '').toLowerCase();
+      if (agentKey && activeAgentIds.has(agentKey)) {
+        agent.status = 'working' as AgentStatus;
+      } else {
+        agent.status = 'standby' as AgentStatus;
       }
     }
 
