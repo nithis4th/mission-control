@@ -11,9 +11,10 @@ type FilterTab = 'all' | 'working' | 'standby';
 
 interface AgentsSidebarProps {
   workspaceId?: string;
+  asPanel?: boolean;
 }
 
-export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
+export function AgentsSidebar({ workspaceId, asPanel = false }: AgentsSidebarProps) {
   const { agents, selectedAgent, setSelectedAgent, agentOpenClawSessions, setAgentOpenClawSession, updateAgent } = useMissionControl();
   const [filter, setFilter] = useState<FilterTab>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -163,7 +164,9 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
   return (
     <aside
       className={`bg-mc-bg-secondary border-r border-mc-border flex flex-col transition-all duration-300 ease-in-out ${
-        isMinimized ? 'w-12' : 'w-64'
+        asPanel
+          ? isMinimized ? 'w-12' : 'w-72'
+          : isMinimized ? 'w-12' : 'w-64'
       }`}
     >
       {/* Header */}

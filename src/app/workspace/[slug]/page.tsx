@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
-import { AgentsSidebar } from '@/components/AgentsSidebar';
 import { MissionQueue } from '@/components/MissionQueue';
+import { AgentsSidebar } from '@/components/AgentsSidebar';
 import { LiveFeed } from '@/components/LiveFeed';
 import { SSEDebugPanel } from '@/components/SSEDebugPanel';
 import { ChatPanel } from '@/components/ChatPanel';
@@ -221,9 +221,9 @@ export default function WorkspacePage() {
         {/* Tab Content */}
         {activeTab === 'agents' && (
           <div className="flex-1 flex overflow-hidden">
-            {/* Agents Sidebar */}
+            {/* Agents Panel — full width, no nested sidebar */}
             <AgentsSidebar workspaceId={workspace.id} />
-            {/* Main Content Area */}
+            {/* Mission Queue */}
             <MissionQueue workspaceId={workspace.id} />
             {/* Live Feed */}
             <LiveFeed />

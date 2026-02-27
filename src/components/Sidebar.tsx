@@ -8,6 +8,7 @@ import {
   Zap,
   Menu,
   X,
+  Bot,
   ClipboardList,
   Newspaper,
   FileText,
@@ -39,6 +40,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  {
+    id: 'agents',
+    label: 'Agents',
+    emoji: '🤖',
+    icon: <Bot className="w-3.5 h-3.5" />,
+  },
   {
     id: 'tasks',
     label: 'Task',
