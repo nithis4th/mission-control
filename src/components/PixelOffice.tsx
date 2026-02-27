@@ -102,18 +102,28 @@ const AGENTS: AgentConfig[] = [
   },
 ];
 
-const DOOR = { x: 214, y: 555 };
+// ===== LAYOUT CONSTANTS =====
+// SVG viewBox: 0 0 860 580
+// LEFT HALF (x: 0-430) = WORK ZONE
+// RIGHT HALF (x: 430-860) = LOUNGE ZONE
+
+const DOOR = { x: 214, y: 558 };
 const PX = 3;
 const CHAR_W = 14 * PX;
 const CHAR_H = 22 * PX;
 
+// Work zone agents — โต๊ะ 2 แถว facing กัน
+// แถวบน: Eve (บนซ้าย) + Dexter (บนขวา) หันลง (seatY > deskY)
+// แถวล่าง: Sherlock (ล่างซ้าย) + Bluma (ล่างขวา) หันขึ้น (seatY < deskY)
+
+// Lounge seats — ที่นั่งเมื่อ standby
 const LOUNGE_SEATS = [
-  { cx: 520, by: 435 },  // โซฟาแนวนอน ซ้าย
-  { cx: 630, by: 435 },  // โซฟาแนวนอน ขวา
-  { cx: 490, by: 310 },  // เก้าอี้ 1
-  { cx: 580, by: 295 },  // เก้าอี้ 2
-  { cx: 750, by: 360 },  // โซฟาแนวตั้ง
-  { cx: 680, by: 435 },  // โซฟาแนวนอน กลาง
+  { cx: 540, by: 440 },  // โซฟาแนวนอน ซ้าย (Shelby)
+  { cx: 650, by: 440 },  // โซฟาแนวนอน ขวา (Monalisa)
+  { cx: 495, by: 320 },  // เก้าอี้ 1 (Goku)
+  { cx: 590, by: 310 },  // เก้าอี้ 2
+  { cx: 755, by: 380 },  // โซฟาแนวตั้ง
+  { cx: 595, by: 440 },  // โซฟาแนวนอน กลาง
 ];
 
 function Agent({
@@ -399,19 +409,14 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
   ), [agents]);
 
   const getTargetPositions = useCallback(() => {
-    const standbyAgents = AGENTS.filter(agent => getStatus(agent.name) === 'standby');
-    const standbySeatByName = new Map<string, { cx: number; by: number }>();
-
-    standbyAgents.forEach((agent, idx) => {
-      const seat = LOUNGE_SEATS[idx % LOUNGE_SEATS.length];
-      standbySeatByName.set(agent.name, seat);
-    });
-
     const target = new Map<string, { cx: number; by: number }>();
+    let loungeIdx = 0;
     AGENTS.forEach(agent => {
       const status = getStatus(agent.name);
-      if (status === 'standby') {
-        target.set(agent.name, standbySeatByName.get(agent.name) || { cx: agent.seatX, by: agent.seatY });
+      // Work agents: ถ้า standby ให้ไปนั่ง lounge seat ฝั่งขวา
+      const isWorkAgent = ['Eve', 'Dexter', 'Sherlock', 'Bluma'].includes(agent.name);
+      if (status === 'standby' && isWorkAgent) {
+        target.set(agent.name, LOUNGE_SEATS[loungeIdx++ % LOUNGE_SEATS.length]);
       } else {
         target.set(agent.name, { cx: agent.seatX, by: agent.seatY });
       }
@@ -422,124 +427,52 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
   useEffect(() => {
     if (agents.length === 0 || animStarted.current) return;
     animStarted.current = true;
-
     const init = new Map<string, { cx: number; by: number }>();
-    const allWalk = new Set<string>();
-    AGENTS.forEach(a => {
-      init.set(a.name, { cx: DOOR.x, by: DOOR.y });
-      allWalk.add(a.name);
-    });
+    AGENTS.forEach(a => { init.set(a.name, { cx: DOOR.x, by: DOOR.y }); });
     setPositions(init);
-    setWalking(allWalk);
 
-    const targets = getTargetPositions();
-
-    AGENTS.forEach((agent, idx) => {
-      const delay = idx * 350;
-      const dur = 1800;
-      const t0 = performance.now() + delay;
-      const target = targets.get(agent.name) || { cx: agent.seatX, by: agent.seatY };
-
-      const step = (now: number) => {
-        const elapsed = now - t0;
-        if (elapsed < 0) { requestAnimationFrame(step); return; }
-        const p = Math.min(elapsed / dur, 1);
-        const e = 1 - Math.pow(1 - p, 3);
-
-        setPositions(prev => {
-          const next = new Map(prev);
-          next.set(agent.name, {
-            cx: DOOR.x + (target.cx - DOOR.x) * e,
-            by: DOOR.y + (target.by - DOOR.y) * e,
-          });
-          return next;
-        });
-
-        if (p < 1) requestAnimationFrame(step);
-        else setWalking(prev => {
-          const n = new Set(prev);
-          n.delete(agent.name);
-          return n;
-        });
-      };
-      requestAnimationFrame(step);
-    });
-  }, [agents, getTargetPositions]);
-
-  useEffect(() => {
-    if (!animStarted.current || positions.size === 0) return;
-
-    const targets = getTargetPositions();
-
-    AGENTS.forEach((agent, idx) => {
-      const current = positions.get(agent.name);
-      const target = targets.get(agent.name);
-      if (!current || !target) return;
-
-      const dist = Math.hypot(target.cx - current.cx, target.by - current.by);
-      if (dist < 1) return;
-
-      const delay = idx * 60;
-      const dur = 1100;
-      const t0 = performance.now() + delay;
-
-      setWalking(prev => new Set(prev).add(agent.name));
-
-      const step = (now: number) => {
-        const elapsed = now - t0;
-        if (elapsed < 0) { requestAnimationFrame(step); return; }
-        const p = Math.min(elapsed / dur, 1);
-        const e = 1 - Math.pow(1 - p, 3);
-
-        setPositions(prev => {
-          const pos = prev.get(agent.name) || current;
-          const next = new Map(prev);
-          next.set(agent.name, {
-            cx: pos.cx + (target.cx - pos.cx) * e * 0.2,
-            by: pos.by + (target.by - pos.by) * e * 0.2,
-          });
-
-          if (p >= 1) next.set(agent.name, target);
-          return next;
-        });
-
-        if (p < 1) {
-          requestAnimationFrame(step);
-        } else {
-          setWalking(prev => {
-            const n = new Set(prev);
-            n.delete(agent.name);
-            return n;
-          });
-        }
-      };
-
-      requestAnimationFrame(step);
-    });
-  }, [agents, getTargetPositions, positions]);
-
-  useEffect(() => {
-    if (!hasSubagents) { setSubWalking(false); return; }
-    setSubWalking(true);
-    setSubPos({ cx: DOOR.x, by: DOOR.y });
-
-    const dexter = AGENTS.find(a => a.name === 'Dexter');
-    if (!dexter) return;
-
-    const tx = dexter.seatX + 45;
-    const ty = dexter.seatY + 5;
-    const t0 = performance.now() + 500;
-    const dur = 2000;
+    const target = getTargetPositions();
+    const t0 = performance.now() + 300;
+    const dur = 1800;
 
     const step = (now: number) => {
       const elapsed = now - t0;
       if (elapsed < 0) { requestAnimationFrame(step); return; }
       const p = Math.min(elapsed / dur, 1);
       const e = 1 - Math.pow(1 - p, 3);
-      setSubPos({
-        cx: DOOR.x + (tx - DOOR.x) * e,
-        by: DOOR.y + (ty - DOOR.y) * e,
+      setPositions(prev => {
+        const next = new Map(prev);
+        AGENTS.forEach(a => {
+          const current = prev.get(a.name) || { cx: DOOR.x, by: DOOR.y };
+          const tgt = target.get(a.name) || { cx: a.seatX, by: a.seatY };
+          next.set(a.name, {
+            cx: current.cx + (tgt.cx - current.cx) * e,
+            by: current.by + (tgt.by - current.by) * e,
+          });
+        });
+        return next;
       });
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [agents, getTargetPositions]);
+
+  useEffect(() => {
+    if (!hasSubagents) { setSubWalking(false); return; }
+    setSubWalking(true);
+    setSubPos({ cx: DOOR.x, by: DOOR.y });
+    const dexter = AGENTS.find(a => a.name === 'Dexter');
+    if (!dexter) return;
+    const tx = dexter.seatX + 10;
+    const ty = dexter.seatY + 5;
+    const t0 = performance.now() + 500;
+    const dur = 2000;
+    const step = (now: number) => {
+      const elapsed = now - t0;
+      if (elapsed < 0) { requestAnimationFrame(step); return; }
+      const p = Math.min(elapsed / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      setSubPos({ cx: DOOR.x + (tx - DOOR.x) * e, by: DOOR.y + (ty - DOOR.y) * e });
       if (p < 1) requestAnimationFrame(step);
       else setSubWalking(false);
     };
@@ -550,200 +483,179 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
 
   return (
     <div className={`relative w-full h-full bg-mc-bg flex flex-col ${compact ? "min-h-0" : "min-h-screen"}`}>
-      {!compact && <div className="w-full flex items-center justify-between px-6 py-3 bg-mc-bg-secondary border-b border-mc-border">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🏢</span>
-          <h1 className="text-lg font-bold text-mc-text tracking-wider uppercase">Office View</h1>
-          <span className="text-xs text-mc-text-secondary bg-mc-bg-tertiary px-2 py-0.5 rounded">8-BIT</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 text-xs text-mc-text-secondary">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-mc-accent-green animate-pulse" />Working</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-mc-accent-yellow" />Standby</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-mc-accent-red" />Offline</span>
-          </div>
-
-        </div>
-      </div>}
-
       <div className={`flex-1 w-full ${compact ? "p-0" : "p-2"}`}>
-        <svg viewBox="0 0 860 580" className={`w-full h-full border border-mc-border rounded-lg bg-[#0a0e14] ${compact ? "max-w-none" : ""}`} style={{ imageRendering: 'auto' }} preserveAspectRatio="xMidYMid slice">
+        <svg viewBox="0 0 860 580" className="w-full h-full bg-[#0a0e14]" style={{ imageRendering: 'auto' }} preserveAspectRatio="xMidYMid slice">
           <defs>
-            <pattern id="floor" width="40" height="40" patternUnits="userSpaceOnUse">
-              <rect width="40" height="40" fill="#141a22" />
-              <rect x="0" y="0" width="20" height="20" fill="#161e28" />
-              <rect x="20" y="20" width="20" height="20" fill="#161e28" />
+            <pattern id="floorL" width="40" height="40" patternUnits="userSpaceOnUse">
+              <rect width="40" height="40" fill="#0d1117" />
+              <rect x="0" y="0" width="20" height="20" fill="#0f1520" />
+              <rect x="20" y="20" width="20" height="20" fill="#0f1520" />
+            </pattern>
+            <pattern id="floorR" width="40" height="40" patternUnits="userSpaceOnUse">
+              <rect width="40" height="40" fill="#0d0d1a" />
+              <rect x="0" y="0" width="20" height="20" fill="#0f0f22" />
+              <rect x="20" y="20" width="20" height="20" fill="#0f0f22" />
             </pattern>
             <filter id="glow"><feGaussianBlur stdDeviation="3" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             <linearGradient id="tvGlow" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4488ff" stopOpacity="0.3"/>
+              <stop offset="0%" stopColor="#4488ff" stopOpacity="0.5"/>
               <stop offset="100%" stopColor="#0033cc" stopOpacity="0.1"/>
             </linearGradient>
           </defs>
 
-          <rect width="860" height="580" fill="url(#floor)" />
+          {/* พื้น 2 โซน */}
+          <rect x={0} y={0} width={430} height={580} fill="url(#floorL)" />
+          <rect x={430} y={0} width={430} height={580} fill="url(#floorR)" />
 
-          <rect width="860" height="6" fill="#30363d" />
-          <rect width="6" height="580" fill="#30363d" />
-          <rect x="854" width="6" height="580" fill="#30363d" />
-          <rect y="574" width="860" height="6" fill="#30363d" />
+          {/* ขอบห้อง */}
+          <rect width="860" height="5" fill="#21262d" />
+          <rect width="5" height="580" fill="#21262d" />
+          <rect x="855" width="5" height="580" fill="#21262d" />
+          <rect y="575" width="860" height="5" fill="#21262d" />
 
-          <rect x={DOOR.x - 22} y="536" width="52" height="40" fill="#3d3122" rx={2} />
-          <rect x={DOOR.x - 18} y="540" width="44" height="34" fill="#0d1117" />
-          <circle cx={DOOR.x + 24} cy="557" r={2.5} fill="#d4af37" />
-          <text x={DOOR.x} y="534" fill="#8b949e" fontSize={8} fontFamily="monospace" textAnchor="middle">ENTRANCE</text>
+          {/* Divider กลาง */}
+          <rect x={428} y={0} width={4} height={560} fill="#21262d" />
+          <rect x={428} y={0} width={4} height={560} fill="#58a6ff" opacity={0.15} />
 
-          <rect x="340" y="10" width="180" height="26" rx={5} fill="#161b22" stroke="#58a6ff" strokeWidth={1.2} />
-          <text x="430" y="28" textAnchor="middle" fill="#58a6ff" fontSize={12} fontFamily="'JetBrains Mono', monospace" fontWeight="bold" filter="url(#glow)">
-            MAYAKATI HQ
-          </text>
+          {/* Zone Labels */}
+          <text x={214} y={40} textAnchor="middle" fill="#3a4a3a" fontSize={9} fontFamily="monospace" letterSpacing={3} fontWeight="bold">WORK ZONE</text>
+          <text x={644} y={40} textAnchor="middle" fill="#3a3a4a" fontSize={9} fontFamily="monospace" letterSpacing={3} fontWeight="bold">LOUNGE ZONE</text>
 
-          {[160, 430, 700].map((lx, i) => (
-            <g key={`l${i}`}>
-              <rect x={lx - 16} y={8} width={32} height={4} rx={1} fill="#30363d" />
-              <rect x={lx - 9} y={12} width={18} height={2} fill="#58a6ff" opacity={0.3} />
-              <ellipse cx={lx} cy={24} rx={50} ry={18} fill="#58a6ff" opacity={0.025} />
+          {/* Header sign */}
+          <rect x={330} y={8} width={200} height={24} rx={4} fill="#161b22" stroke="#58a6ff" strokeWidth={1}/>
+          <text x={430} y={25} textAnchor="middle" fill="#58a6ff" fontSize={11} fontFamily="monospace" fontWeight="bold" filter="url(#glow)">MAYAKATI HQ</text>
+
+          {/* ไฟ ceiling */}
+          {[110, 320, 540, 750].map((lx, i) => (
+            <g key={`lamp${i}`}>
+              <rect x={lx-2} y={5} width={4} height={15} fill="#30363d" />
+              <ellipse cx={lx} cy={22} rx={40} ry={14} fill={i < 2 ? "#58a6ff" : "#a371f7"} opacity={0.04}/>
             </g>
           ))}
 
-          {[{x:30,y:45},{x:815,y:45},{x:30,y:490},{x:815,y:490}].map((p,i) => (
-            <g key={`p${i}`}>
-              <rect x={p.x-7} y={p.y+12} width={14} height={16} rx={2} fill="#5a3825" />
-              <circle cx={p.x} cy={p.y+8} r={9} fill="#2d5a27" />
-              <circle cx={p.x-4} cy={p.y+4} r={6} fill="#3fb950" opacity={0.5} />
-              <circle cx={p.x+5} cy={p.y+2} r={7} fill="#2d5a27" />
-            </g>
+          {/* ===== WORK ZONE (ซ้าย x:0-430) ===== */}
+
+          {/* ผนังด้านบนซ้าย — แขวนรูปภาพ/กระดาน */}
+          <rect x={20} y={60} width={80} height={50} rx={3} fill="#161b22" stroke="#30363d" strokeWidth={1}/>
+          <text x={60} y={82} textAnchor="middle" fill="#3fb950" fontSize={6} fontFamily="monospace">SPRINT</text>
+          <rect x={25} y={85} width={70} height={3} rx={1} fill="#3fb950" opacity={0.6}/>
+          <rect x={25} y={92} width={50} height={3} rx={1} fill="#3fb950" opacity={0.3}/>
+          <rect x={25} y={99} width={60} height={3} rx={1} fill="#f85149" opacity={0.4}/>
+
+          <rect x={120} y={60} width={60} height={50} rx={3} fill="#161b22" stroke="#30363d" strokeWidth={1}/>
+          <text x={150} y={80} textAnchor="middle" fill="#d29922" fontSize={6} fontFamily="monospace">Q2 OKR</text>
+          <rect x={125} y={85} width={50} height={3} rx={1} fill="#d29922" opacity={0.5}/>
+          <rect x={125} y={92} width={35} height={3} rx={1} fill="#d29922" opacity={0.3}/>
+
+          {/* ต้นไม้มุมซ้าย */}
+          <rect x={12} y={480} width={12} height={24} rx={2} fill="#5a3825"/>
+          <circle cx={18} cy={472} r={12} fill="#2d5a27"/>
+          <circle cx={13} cy={466} r={8} fill="#3fb950" opacity={0.6}/>
+          <circle cx={24} cy={464} r={9} fill="#2d5a27"/>
+
+          {/* Desk row ===== */}
+          {AGENTS.map(a => a.deskW > 0 && (
+            <Desk key={`d-${a.name}`} agent={a} status={getStatus(a.name)} />
           ))}
 
-          {!compact && (
-          <g>
-            <rect x={360} y={448} width={470} height={118} rx={10} fill="#111923" stroke="#2a3544" strokeWidth={1.5} />
-            <rect x={380} y={468} width={300} height={16} rx={3} fill="#2f4c7d" />
-            <rect x={380} y={484} width={300} height={44} rx={5} fill="#3d66a3" />
-            {[402, 448, 494, 540, 586, 632].map(x => <rect key={x} x={x} y={490} width={22} height={30} rx={2} fill="#4c79bb" />)}
-            <rect x={366} y={520} width={16} height={20} fill="#2f4c7d" />
-            <rect x={678} y={520} width={16} height={20} fill="#2f4c7d" />
+          {/* ===== LOUNGE ZONE (ขวา x:430-860) ===== */}
 
-            <rect x={708} y={460} width={62} height={38} rx={3} fill="#111" stroke="#444" strokeWidth={1} />
-            <rect x={712} y={464} width={54} height={26} fill="#1d2b3a" />
-            <rect x={716} y={468} width={20} height={2} fill="#58a6ff" opacity={0.6} />
-            <rect x={716} y={472} width={32} height={2} fill="#39d353" opacity={0.6} />
-            <rect x={731} y={496} width={12} height={5} fill="#444" />
+          {/* TV ผนังขวาบน */}
+          <rect x={800} y={100} width={52} height={85} rx={4} fill="#0d0d0d" stroke="#333" strokeWidth={2}/>
+          <rect x={805} y={105} width={42} height={68} rx={2} fill="#050518"/>
+          <rect x={805} y={105} width={42} height={68} rx={2} fill="url(#tvGlow)" opacity={0.8}/>
+          <rect x={815} y={175} width={22} height={10} fill="#222"/>
+          {/* TV glow on wall */}
+          <ellipse cx={824} cy={140} rx={35} ry={25} fill="#4488ff" opacity={0.05}/>
+          {/* TV content lines */}
+          <rect x={809} y={112} width={10} height={2} rx={1} fill="#58a6ff" opacity={0.6}/>
+          <rect x={809} y={117} width={30} height={2} rx={1} fill="#58a6ff" opacity={0.3}/>
+          <rect x={809} y={122} width={20} height={2} rx={1} fill="#39d353" opacity={0.4}/>
 
-            <rect x={786} y={504} width={18} height={20} rx={2} fill="#6b4428" />
-            <circle cx={795} cy={500} r={10} fill="#2f7a3a" />
-            <circle cx={790} cy={496} r={6} fill="#3fb950" opacity={0.7} />
+          {/* ต้นไม้มุมขวา */}
+          <rect x={836} y={480} width={12} height={24} rx={2} fill="#5a3825"/>
+          <circle cx={842} cy={472} r={12} fill="#2d5a27"/>
+          <circle cx={837} cy={466} r={8} fill="#3fb950" opacity={0.6}/>
+          <circle cx={848} cy={464} r={9} fill="#2d5a27"/>
 
-            <text x={384} y={444} fill="#8b949e" fontSize={8} fontFamily="monospace">LOUNGE · standby chill zone ({standbyCount})</text>
-          </g>
-          )}
-
-          <rect x={785} y={250} width={18} height={32} rx={2} fill="#4a6fa5" />
-          <rect x={787} y={240} width={14} height={12} rx={7} fill="#a8d0f0" opacity={0.5} />
-
-          {/* ===== ZONE DIVIDER ===== */}
-          <rect x={428} y={10} width={2} height={560} fill="#2a3544" opacity={0.8}/>
-          <text x={110} y={60} textAnchor="middle" fill="#3d4f3d" fontSize={9} fontFamily="monospace" letterSpacing={2}>WORK ZONE</text>
-          <text x={640} y={60} textAnchor="middle" fill="#3d3d4f" fontSize={9} fontFamily="monospace" letterSpacing={2}>LOUNGE ZONE</text>
-
-          {/* ===== LOUNGE FURNITURE ===== */}
           {/* พรม */}
-          <ellipse cx={640} cy={400} rx={185} ry={95} fill="#1a1a2e" opacity={0.65}/>
+          <ellipse cx={640} cy={410} rx={190} ry={100} fill="#14142a" opacity={0.8}/>
+          <ellipse cx={640} cy={410} rx={175} ry={86} fill="none" stroke="#2a2a4a" strokeWidth={2}/>
 
           {/* โซฟา L-shape แนวนอน (bottom) */}
-          <rect x={480} y={395} width={280} height={20} rx={4} fill="#1a1228"/>
-          <rect x={480} y={408} width={280} height={60} rx={8} fill="#2a1f3d"/>
-          <rect x={483} y={415} width={274} height={35} rx={4} fill="#3d2d5a"/>
+          {/* พนักพิงหลัง */}
+          <rect x={472} y={398} width={295} height={18} rx={4} fill="#1a1228"/>
+          {/* เบาะ */}
+          <rect x={472} y={413} width={295} height={65} rx={8} fill="#2a1f3d"/>
+          {/* เบาะนั่ง texture */}
+          <rect x={476} y={417} width={287} height={40} rx={5} fill="#3d2d5a"/>
+          {/* เส้นแบ่งเบาะ */}
+          <rect x={570} y={417} width={2} height={40} fill="#2a1f3d" opacity={0.5}/>
+          <rect x={668} y={417} width={2} height={40} fill="#2a1f3d" opacity={0.5}/>
 
           {/* โซฟา L-shape แนวตั้ง (right arm) */}
-          <rect x={718} y={280} width={20} height={180} rx={4} fill="#1a1228"/>
-          <rect x={730} y={280} width={55} height={180} rx={8} fill="#2a1f3d"/>
-          <rect x={733} y={283} width={35} height={174} rx={4} fill="#3d2d5a"/>
+          <rect x={720} y={280} width={18} height={200} rx={4} fill="#1a1228"/>
+          <rect x={735} y={280} width={60} height={200} rx={8} fill="#2a1f3d"/>
+          <rect x={738} y={284} width={40} height={192} rx={5} fill="#3d2d5a"/>
+          {/* เส้นแบ่งเบาะแนวตั้ง */}
+          <rect x={738} y={380} width={40} height={2} fill="#2a1f3d" opacity={0.5}/>
 
-          {/* เก้าอี้ 2 ตัว */}
-          <rect x={455} y={288} width={52} height={52} rx={6} fill="#1e2d1e"/>
-          <rect x={455} y={280} width={52} height={12} rx={4} fill="#162416"/>
-          <rect x={570} y={268} width={52} height={52} rx={6} fill="#1e2d1e"/>
-          <rect x={570} y={260} width={52} height={12} rx={4} fill="#162416"/>
+          {/* เก้าอี้ 1 (สำหรับ Goku) */}
+          <rect x={460} y={298} width={55} height={55} rx={6} fill="#1e2d1e"/>
+          <rect x={460} y={288} width={55} height={14} rx={5} fill="#162416"/>
+          <rect x={463} y={302} width={49} height={40} rx={4} fill="#253525"/>
 
-          {/* TV ผนังขวา */}
-          <rect x={798} y={155} width={52} height={90} rx={4} fill="#111" stroke="#444" strokeWidth={2}/>
-          <rect x={803} y={160} width={42} height={72} rx={2} fill="#050518"/>
-          <rect x={803} y={160} width={42} height={72} rx={2} fill="url(#tvGlow)" opacity={0.7}/>
-          <rect x={813} y={234} width={20} height={10} fill="#333"/>
-          <rect x={805} y={164} width={8} height={2} rx={1} fill="#58a6ff" opacity={0.5}/>
+          {/* เก้าอี้ 2 (ว่าง) */}
+          <rect x={580} y={278} width={55} height={55} rx={6} fill="#1e2d1e"/>
+          <rect x={580} y={268} width={55} height={14} rx={5} fill="#162416"/>
+          <rect x={583} y={282} width={49} height={40} rx={4} fill="#253525"/>
 
-          {AGENTS.map(a => <Desk key={`d-${a.name}`} agent={a} status={getStatus(a.name)} />)}
+          {/* โต๊ะกลาง coffee table */}
+          <rect x={590} y={368} width={90} height={35} rx={4} fill="#1e1e2e" stroke="#2a2a4a" strokeWidth={1}/>
+          <rect x={595} y={373} width={80} height={25} rx={2} fill="#252535"/>
+          {/* ของบนโต๊ะ */}
+          <circle cx={615} cy={385} r={4} fill="#3d3d5a"/>
+          <rect x={625} y={378} width={20} height={14} rx={2} fill="#2d4a2d" opacity={0.8}/>
 
+          {/* Entrance ประตู */}
+          <rect x={DOOR.x - 24} y={540} width={56} height={38} rx={3} fill="#1e2d22" stroke="#3fb950" strokeWidth={1}/>
+          <rect x={DOOR.x - 19} y={545} width={46} height={31} rx={2} fill="#0d1a10"/>
+          <circle cx={DOOR.x + 18} cy={560} r={2.5} fill="#d4af37"/>
+          <text x={DOOR.x} y={538} textAnchor="middle" fill="#3fb950" fontSize={7} fontFamily="monospace" opacity={0.7}>ENTRANCE</text>
+
+          {/* Render agents */}
           {AGENTS.map(a => {
             const pos = positions.get(a.name);
             if (!pos) return null;
             return (
-              <Agent key={a.name} cx={pos.cx} bottomY={pos.by} color={a.color} status={getStatus(a.name)} name={a.name} isWalking={walking.has(a.name)} gender={a.gender} hairColor={a.hairColor} dressColor={a.dressColor} agentSkin={a.skin} />
+              <Agent
+                key={a.name}
+                cx={pos.cx}
+                bottomY={pos.by}
+                color={a.color}
+                status={getStatus(a.name)}
+                name={a.name}
+                isWalking={walking.has(a.name)}
+                gender={a.gender}
+                hairColor={a.hairColor}
+                dressColor={a.dressColor}
+                agentSkin={a.skin}
+              />
             );
           })}
 
+          {/* Subagent indicator */}
           {hasSubagents && (
-            <Agent cx={subPos.cx} bottomY={subPos.by} color="#39d353" status="working" name="helper" isWalking={subWalking} isMini />
+            <Agent cx={subPos.cx} bottomY={subPos.by} color="#ff8c00" status="working" name="?" isWalking={subWalking} />
           )}
 
-          {AGENTS.map(a => {
-            const st = getStatus(a.name);
-            const pos = positions.get(a.name);
-            if (!pos) return null;
-
-            if (st === 'working') {
-              return (
-                <text key={`t-${a.name}`} x={pos.cx + CHAR_W / 2 + 12} y={pos.by - CHAR_H + 10} fill={a.color} fontSize={9} fontFamily="monospace" opacity={0.8} className="pixel-typing-indicator" filter="url(#glow)">
-                  ⌨️ clack
-                </text>
-              );
-            }
-            if (st === 'standby') {
-              return (
-                <text key={`z-${a.name}`} x={pos.cx + CHAR_W / 2 + 8} y={pos.by - CHAR_H + 5} fill="#8b949e" fontSize={16} className="pixel-zzz">
-                  💤
-                </text>
-              );
-            }
-            return null;
-          })}
-
-          {/* LOUNGE ZONE */}
-          {/* พรม */}
-          <ellipse cx="550" cy="420" rx="190" ry="85" fill="#1a1a2e" opacity="0.7"/>
-          {/* โซฟา L-shape แนวนอน */}
-          <rect x="390" y="360" width="290" height="65" rx="8" fill="#2a1f3d"/>
-          <rect x="390" y="340" width="290" height="25" rx="4" fill="#1a1228"/>
-          <rect x="390" y="360" width="290" height="30" rx="4" fill="#3d2d5a"/>
-          {/* โซฟา L-shape แนวตั้ง */}
-          <rect x="640" y="260" width="65" height="165" rx="8" fill="#2a1f3d"/>
-          <rect x="660" y="260" width="25" height="165" rx="4" fill="#1a1228"/>
-          <rect x="640" y="260" width="40" height="165" rx="4" fill="#3d2d5a"/>
-          {/* TV ผนังขวา */}
-          <rect x="790" y="175" width="55" height="90" rx="4" fill="#1a1a1a" stroke="#444" strokeWidth="2"/>
-          <rect x="795" y="180" width="45" height="72" rx="2" fill="#050518"/>
-          <rect x="795" y="180" width="45" height="72" rx="2" fill="url(#tvGlow)" opacity="0.6"/>
-          <rect x="807" y="267" width="20" height="12" fill="#333"/>
-          {/* เก้าอี้ 2 ตัว */}
-          <rect x="375" y="270" width="48" height="48" rx="6" fill="#1e2d1e"/>
-          <rect x="375" y="262" width="48" height="12" rx="4" fill="#162416"/>
-          <rect x="490" y="245" width="48" height="48" rx="6" fill="#1e2d1e"/>
-          <rect x="490" y="237" width="48" height="12" rx="4" fill="#162416"/>
-          {/* Label */}
-          <text x="400" y="230" fontSize="8" fill="#666" fontFamily="monospace" letterSpacing="2">LOUNGE ZONE</text>
+          {/* Status bar */}
+          <rect x={6} y={550} width={200} height={22} rx={3} fill="#161b22" opacity={0.8}/>
+          <text x={12} y={565} fill="#8b949e" fontSize={7} fontFamily="monospace">
+            👥 {agents.filter(a => a.status === 'working').length} working  😴 {standbyCount} standby  Auto-refresh: 10s
+          </text>
         </svg>
       </div>
-
-      {!compact && <div className="w-full px-6 py-2 bg-mc-bg-secondary border-t border-mc-border flex items-center justify-between text-xs text-mc-text-secondary">
-        <div className="flex items-center gap-4">
-          <span>👥 {agents.filter(a => a.status === 'working').length} working</span>
-          <span>😴 {standbyCount} standby</span>
-          <span>⛔ {agents.filter(a => a.status === 'offline').length} offline</span>
-          {hasSubagents && <span className="text-mc-accent-green">🤖 Dexter has active sub-agents</span>}
-        </div>
-        <span>Auto-refresh: 10s</span>
-      </div>}
     </div>
   );
 }
