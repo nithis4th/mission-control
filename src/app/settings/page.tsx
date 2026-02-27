@@ -55,14 +55,14 @@ export default function SettingsPage() {
 
   if (!config) {
     return (
-      <div className="min-h-screen bg-mc-bg flex items-center justify-center">
+      <div className="h-full bg-mc-bg flex items-center justify-center">
         <div className="text-mc-text-secondary">Loading settings...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-mc-bg">
+    <div className="h-full bg-mc-bg">
       {/* Header */}
       <div className="border-b border-mc-border bg-mc-bg-secondary">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -120,13 +120,13 @@ export default function SettingsPage() {
             <FolderOpen className="w-5 h-5 text-mc-accent" />
             <h2 className="text-xl font-semibold text-mc-text">Workspace Paths</h2>
           </div>
-          <p className="text-sm text-mc-text-secondary mb-4">
+          <p className="text-xs text-mc-text-secondary mb-4">
             Configure where Mission Control stores projects and deliverables.
           </p>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-mc-text mb-2">
+              <label className="block text-xs font-medium text-mc-text mb-2">
                 Workspace Base Path
               </label>
               <input
@@ -142,7 +142,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-mc-text mb-2">
+              <label className="block text-xs font-medium text-mc-text mb-2">
                 Projects Path
               </label>
               <input
@@ -158,7 +158,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-mc-text mb-2">
+              <label className="block text-xs font-medium text-mc-text mb-2">
                 Default Project Name
               </label>
               <input
@@ -181,13 +181,13 @@ export default function SettingsPage() {
             <LinkIcon className="w-5 h-5 text-mc-accent" />
             <h2 className="text-xl font-semibold text-mc-text">API Configuration</h2>
           </div>
-          <p className="text-sm text-mc-text-secondary mb-4">
+          <p className="text-xs text-mc-text-secondary mb-4">
             Configure Mission Control API URL for agent orchestration.
           </p>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-mc-text mb-2">
+              <label className="block text-xs font-medium text-mc-text mb-2">
                 Mission Control URL
               </label>
               <input
@@ -206,13 +206,13 @@ export default function SettingsPage() {
 
         {/* Environment Variables Note */}
         <section className="p-6 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-          <h3 className="text-lg font-semibold text-blue-400 mb-2">
+          <h3 className="text-base font-semibold text-blue-400 mb-2">
             📝 Environment Variables
           </h3>
-          <p className="text-sm text-blue-300 mb-3">
+          <p className="text-xs text-blue-300 mb-3">
             Some settings are also configurable via environment variables in <code className="px-2 py-1 bg-mc-bg rounded">.env.local</code>:
           </p>
-          <ul className="text-sm text-blue-300 space-y-1 ml-4 list-disc">
+          <ul className="text-xs text-blue-300 space-y-1 ml-4 list-disc">
             <li><code>MISSION_CONTROL_URL</code> - API URL override</li>
             <li><code>WORKSPACE_BASE_PATH</code> - Base workspace directory</li>
             <li><code>PROJECTS_PATH</code> - Projects directory</li>

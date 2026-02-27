@@ -100,11 +100,11 @@ export function MissionQueue({ workspaceId }: MissionQueueProps) {
       <div className="p-3 border-b border-mc-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ChevronRight className="w-4 h-4 text-mc-text-secondary" />
-          <span className="text-sm font-medium uppercase tracking-wider">Mission Queue</span>
+          <span className="text-xs font-medium uppercase tracking-wider">Mission Queue</span>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-mc-accent-pink text-mc-bg rounded text-sm font-medium hover:bg-mc-accent-pink/90"
+          className="flex items-center gap-2 px-3 py-1.5 bg-mc-accent-pink text-mc-bg rounded text-xs font-medium hover:bg-mc-accent-pink/90"
         >
           <Plus className="w-4 h-4" />
           New Task
@@ -201,7 +201,7 @@ function TaskCard({ task, onDragStart, onClick, isDragging }: TaskCardProps) {
       {/* Card content */}
       <div className="p-4">
         {/* Title */}
-        <h4 className="text-sm font-medium leading-snug line-clamp-2 mb-3">
+        <h4 className="text-xs font-medium leading-snug line-clamp-2 mb-3">
           {task.title}
         </h4>
         
@@ -216,7 +216,7 @@ function TaskCard({ task, onDragStart, onClick, isDragging }: TaskCardProps) {
         {/* Assigned agent */}
         {task.assigned_agent && (
           <div className="flex items-center gap-2 mb-3 py-1.5 px-2 bg-mc-bg-tertiary/50 rounded">
-            <span className="text-base">{(task.assigned_agent as unknown as { avatar_emoji: string }).avatar_emoji}</span>
+            <span className="text-sm">{(task.assigned_agent as unknown as { avatar_emoji: string }).avatar_emoji}</span>
             <span className="text-xs text-mc-text-secondary truncate">
               {(task.assigned_agent as unknown as { name: string }).name}
             </span>

@@ -168,7 +168,7 @@ export default function WorkspacePage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-mc-bg flex items-center justify-center">
+      <div className="h-full bg-mc-bg flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🔍</div>
           <h1 className="text-2xl font-bold mb-2">Workspace Not Found</h1>
@@ -189,7 +189,7 @@ export default function WorkspacePage() {
 
   if (isLoading || !workspace) {
     return (
-      <div className="min-h-screen bg-mc-bg flex items-center justify-center">
+      <div className="h-full bg-mc-bg flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-pulse">🦞</div>
           <p className="text-mc-text-secondary">Loading {slug}...</p>
@@ -243,7 +243,7 @@ export default function WorkspacePage() {
               <p className="text-mc-text-secondary">
                 Browse past conversations by topic.
               </p>
-              <p className="text-mc-text-secondary text-sm mt-2">
+              <p className="text-mc-text-secondary text-xs mt-2">
                 Coming soon...
               </p>
             </div>

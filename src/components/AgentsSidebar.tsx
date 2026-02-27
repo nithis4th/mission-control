@@ -174,7 +174,7 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
           </button>
           {!isMinimized && (
             <>
-              <span className="text-sm font-medium uppercase tracking-wider">Agents</span>
+              <span className="text-xs font-medium uppercase tracking-wider">Agents</span>
               <span className="bg-mc-bg-tertiary text-mc-text-secondary text-xs px-2 py-0.5 rounded ml-2">
                 {agents.length}
               </span>
@@ -187,7 +187,7 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
             {/* Active Sub-Agents Counter */}
             {activeSubAgents > 0 && (
               <div className="mb-3 mt-3 px-3 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-xs">
                   <span className="text-green-400">●</span>
                   <span className="text-mc-text">Active Sub-Agents:</span>
                   <span className="font-bold text-green-400">{activeSubAgents}</span>
@@ -283,7 +283,7 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm truncate">{agent.name}</span>
+                    <span className="font-medium text-xs truncate">{agent.name}</span>
                     {!!agent.is_master && (
                       <span className="text-xs text-mc-accent-yellow">★</span>
                     )}
@@ -349,14 +349,14 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
         <div className="p-3 border-t border-mc-border space-y-2">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-mc-bg-tertiary hover:bg-mc-border rounded text-sm text-mc-text-secondary hover:text-mc-text transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-mc-bg-tertiary hover:bg-mc-border rounded text-xs text-mc-text-secondary hover:text-mc-text transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Agent
           </button>
           <button
             onClick={() => setShowDiscoverModal(true)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded text-xs text-blue-400 hover:text-blue-300 transition-colors"
           >
             <Search className="w-4 h-4" />
             Import from Gateway

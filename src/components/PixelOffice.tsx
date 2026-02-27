@@ -327,7 +327,7 @@ function Desk({ agent, status }: { agent: AgentConfig; status: AgentStatus }) {
   );
 }
 
-export function PixelOffice() {
+export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
   const [agents, setAgents] = useState<AgentData[]>([]);
   const [positions, setPositions] = useState<Map<string, { cx: number; by: number }>>(new Map());
   const [walking, setWalking] = useState<Set<string>>(new Set());
@@ -515,8 +515,8 @@ export function PixelOffice() {
   const standbyCount = agents.filter(a => a.status === 'standby').length;
 
   return (
-    <div className="relative w-full h-full min-h-screen bg-mc-bg flex flex-col items-center">
-      <div className="w-full flex items-center justify-between px-6 py-3 bg-mc-bg-secondary border-b border-mc-border">
+    <div className={`relative w-full h-full bg-mc-bg flex flex-col items-center ${compact ? "min-h-0" : "min-h-screen"}`}>
+      {!compact && <div className="w-full flex items-center justify-between px-6 py-3 bg-mc-bg-secondary border-b border-mc-border">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🏢</span>
           <h1 className="text-lg font-bold text-mc-text tracking-wider uppercase">Office View</h1>
@@ -532,10 +532,10 @@ export function PixelOffice() {
             ← Dashboard
           </a>
         </div>
-      </div>
+      </div>}
 
-      <div className="flex-1 flex items-center justify-center p-4 w-full">
-        <svg viewBox="0 0 860 580" className="w-full max-w-5xl border border-mc-border rounded-lg bg-[#0a0e14]" style={{ imageRendering: 'auto' }}>
+      <div className={`flex-1 flex items-center justify-center w-full ${compact ? "p-2" : "p-4"}`}>
+        <svg viewBox="0 0 860 580" className={`w-full border border-mc-border rounded-lg bg-[#0a0e14] ${compact ? "max-w-none h-full" : "max-w-5xl"}`} style={{ imageRendering: 'auto' }}>
           <defs>
             <pattern id="floor" width="40" height="40" patternUnits="userSpaceOnUse">
               <rect width="40" height="40" fill="#141a22" />
@@ -579,7 +579,7 @@ export function PixelOffice() {
             </g>
           ))}
 
-          {/* Lounge area */}
+          {!compact && (
           <g>
             <rect x={500} y={455} width={310} height={108} rx={8} fill="#111923" stroke="#2a3544" strokeWidth={1.5} />
             <rect x={512} y={468} width={210} height={18} rx={3} fill="#2f4c7d" />
@@ -600,6 +600,7 @@ export function PixelOffice() {
 
             <text x={516} y={450} fill="#8b949e" fontSize={8} fontFamily="monospace">LOUNGE · standby chill zone ({standbyCount})</text>
           </g>
+          )}
 
           <rect x={785} y={250} width={18} height={32} rx={2} fill="#4a6fa5" />
           <rect x={787} y={240} width={14} height={12} rx={7} fill="#a8d0f0" opacity={0.5} />
@@ -642,7 +643,7 @@ export function PixelOffice() {
         </svg>
       </div>
 
-      <div className="w-full px-6 py-2 bg-mc-bg-secondary border-t border-mc-border flex items-center justify-between text-xs text-mc-text-secondary">
+      {!compact && <div className="w-full px-6 py-2 bg-mc-bg-secondary border-t border-mc-border flex items-center justify-between text-xs text-mc-text-secondary">
         <div className="flex items-center gap-4">
           <span>👥 {agents.filter(a => a.status === 'working').length} working</span>
           <span>😴 {standbyCount} standby</span>
@@ -650,7 +651,7 @@ export function PixelOffice() {
           {hasSubagents && <span className="text-mc-accent-green">🤖 Dexter has active sub-agents</span>}
         </div>
         <span>Auto-refresh: 10s</span>
-      </div>
+      </div>}
     </div>
   );
 }

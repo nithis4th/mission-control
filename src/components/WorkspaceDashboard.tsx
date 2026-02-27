@@ -30,7 +30,7 @@ export function WorkspaceDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-mc-bg flex items-center justify-center">
+      <div className="h-full bg-mc-bg flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-pulse">🦞</div>
           <p className="text-mc-text-secondary">Loading workspaces...</p>
@@ -40,18 +40,18 @@ export function WorkspaceDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-mc-bg">
+    <div className="h-full bg-mc-bg overflow-hidden flex flex-col">
       {/* Header */}
       <header className="border-b border-mc-border bg-mc-bg-secondary">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🦞</span>
+              <span className="text-xl">🦞</span>
               <h1 className="text-xl font-bold">Mission Control</h1>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-mc-accent text-mc-bg rounded-lg font-medium hover:bg-mc-accent/90"
+              className="flex items-center gap-2 px-3 py-1.5 bg-mc-accent text-mc-bg rounded-lg font-medium hover:bg-mc-accent/90"
             >
               <Plus className="w-4 h-4" />
               New Workspace
@@ -61,9 +61,9 @@ export function WorkspaceDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-4 flex-1 overflow-y-auto">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2">All Workspaces</h2>
+          <h2 className="text-xl font-bold mb-2">All Workspaces</h2>
           <p className="text-mc-text-secondary">
             Select a workspace to view its mission queue and agents
           </p>
@@ -72,7 +72,7 @@ export function WorkspaceDashboard() {
         {workspaces.length === 0 ? (
           <div className="text-center py-16">
             <Folder className="w-16 h-16 mx-auto text-mc-text-secondary mb-4" />
-            <h3 className="text-lg font-medium mb-2">No workspaces yet</h3>
+            <h3 className="text-base font-medium mb-2">No workspaces yet</h3>
             <p className="text-mc-text-secondary mb-6">
               Create your first workspace to get started
             </p>
@@ -84,7 +84,7 @@ export function WorkspaceDashboard() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {workspaces.map((workspace) => (
               <WorkspaceCard 
                 key={workspace.id} 
@@ -96,7 +96,7 @@ export function WorkspaceDashboard() {
             {/* Add workspace card */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="border-2 border-dashed border-mc-border rounded-xl p-6 hover:border-mc-accent/50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[200px]"
+              className="border-2 border-dashed border-mc-border rounded-xl p-4 hover:border-mc-accent/50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[150px]"
             >
               <div className="w-12 h-12 rounded-full bg-mc-bg-tertiary flex items-center justify-center">
                 <Plus className="w-6 h-6 text-mc-text-secondary" />
@@ -148,15 +148,15 @@ function WorkspaceCard({ workspace, onDelete }: { workspace: WorkspaceStats; onD
   return (
     <>
     <Link href={`/workspace/${workspace.slug}`}>
-      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-6 hover:border-mc-accent/50 transition-all hover:shadow-lg cursor-pointer group relative">
+      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-4 hover:border-mc-accent/50 transition-all hover:shadow-lg cursor-pointer group relative">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{workspace.icon}</span>
+            <span className="text-2xl">{workspace.icon}</span>
             <div>
-              <h3 className="font-semibold text-lg group-hover:text-mc-accent transition-colors">
+              <h3 className="font-semibold text-sm group-hover:text-mc-accent transition-colors">
                 {workspace.name}
               </h3>
-              <p className="text-sm text-mc-text-secondary">/{workspace.slug}</p>
+              <p className="text-xs text-mc-text-secondary">/{workspace.slug}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ function WorkspaceCard({ workspace, onDelete }: { workspace: WorkspaceStats; onD
         </div>
 
         {/* Simple task/agent counts */}
-        <div className="flex items-center gap-4 text-sm text-mc-text-secondary mt-4">
+        <div className="flex items-center gap-4 text-xs text-mc-text-secondary mt-4">
           <div className="flex items-center gap-1">
             <CheckSquare className="w-4 h-4" />
             <span>{workspace.taskCounts.total} tasks</span>
@@ -200,8 +200,8 @@ function WorkspaceCard({ workspace, onDelete }: { workspace: WorkspaceStats; onD
               <AlertTriangle className="w-6 h-6 text-mc-accent-red" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg">Delete Workspace</h3>
-              <p className="text-sm text-mc-text-secondary">This action cannot be undone</p>
+              <h3 className="font-semibold text-base">Delete Workspace</h3>
+              <p className="text-xs text-mc-text-secondary">This action cannot be undone</p>
             </div>
           </div>
           
@@ -224,7 +224,7 @@ function WorkspaceCard({ workspace, onDelete }: { workspace: WorkspaceStats; onD
             <button
               onClick={handleDelete}
               disabled={deleting || workspace.taskCounts.total > 0 || workspace.agentCount > 0}
-              className="px-4 py-2 bg-mc-accent-red text-white rounded-lg font-medium hover:bg-mc-accent-red/90 disabled:opacity-50"
+              className="px-3 py-1.5 bg-mc-accent-red text-white rounded-lg font-medium hover:bg-mc-accent-red/90 disabled:opacity-50"
             >
               {deleting ? 'Deleting...' : 'Delete Workspace'}
             </button>
@@ -275,13 +275,13 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-mc-bg-secondary border border-mc-border rounded-xl w-full max-w-md">
         <div className="p-6 border-b border-mc-border">
-          <h2 className="text-lg font-semibold">Create New Workspace</h2>
+          <h2 className="text-base font-semibold">Create New Workspace</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Icon selector */}
           <div>
-            <label className="block text-sm font-medium mb-2">Icon</label>
+            <label className="block text-xs font-medium mb-2">Icon</label>
             <div className="flex flex-wrap gap-2">
               {icons.map((i) => (
                 <button
@@ -302,7 +302,7 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
 
           {/* Name input */}
           <div>
-            <label className="block text-sm font-medium mb-2">Name</label>
+            <label className="block text-xs font-medium mb-2">Name</label>
             <input
               type="text"
               value={name}
@@ -314,7 +314,7 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
           </div>
 
           {error && (
-            <div className="text-mc-accent-red text-sm">{error}</div>
+            <div className="text-mc-accent-red text-xs">{error}</div>
           )}
 
           <div className="flex justify-end gap-3 pt-4">

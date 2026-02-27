@@ -133,7 +133,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-mc-accent-green rounded-full border-2 border-mc-bg-secondary" />
             </div>
             <div>
-              <h2 className="font-semibold text-lg">Chat with Eve</h2>
+              <h2 className="font-semibold text-base">Chat with Eve</h2>
               <p className="text-xs text-mc-text-secondary">AI Orchestrator — Direct Message</p>
             </div>
           </div>
@@ -145,8 +145,8 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center py-20">
                 <span className="text-6xl mb-4">💬</span>
-                <h3 className="text-lg font-semibold mb-2">Start a conversation with Eve</h3>
-                <p className="text-mc-text-secondary text-sm max-w-md">
+                <h3 className="text-base font-semibold mb-2">Start a conversation with Eve</h3>
+                <p className="text-mc-text-secondary text-xs max-w-md">
                   Eve is your AI orchestrator. Ask her to manage tasks, coordinate agents, or get status updates on your projects.
                 </p>
               </div>
@@ -158,7 +158,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] rounded-xl px-5 py-3 text-sm ${
+                  className={`max-w-[70%] rounded-xl px-5 py-3 text-xs ${
                     msg.role === 'user'
                       ? 'bg-mc-accent text-mc-bg rounded-br-sm'
                       : 'bg-mc-bg-secondary border border-mc-border text-mc-text rounded-bl-sm'
@@ -195,7 +195,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
                 <div className="bg-mc-bg-secondary border border-mc-border rounded-xl rounded-bl-sm px-5 py-3">
                   <div className="flex items-center gap-2 text-mc-text-secondary">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Eve is typing...</span>
+                    <span className="text-xs">Eve is typing...</span>
                   </div>
                 </div>
               </div>
@@ -222,7 +222,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
               onKeyDown={handleKeyDown}
               placeholder="Message Eve..."
               rows={1}
-              className="flex-1 bg-mc-bg border border-mc-border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-mc-accent max-h-32"
+              className="flex-1 bg-mc-bg border border-mc-border rounded-xl px-4 py-3 text-xs resize-none focus:outline-none focus:border-mc-accent max-h-32"
               style={{
                 height: 'auto',
                 minHeight: '44px',
@@ -262,7 +262,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
         <MessageSquare className="w-6 h-6 text-mc-bg" />
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-mc-accent-green rounded-full border-2 border-mc-bg animate-pulse" />
         {/* Tooltip */}
-        <span className="absolute right-full mr-3 px-3 py-1.5 bg-mc-bg-secondary text-mc-text text-sm rounded-lg border border-mc-border opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
+        <span className="absolute right-full mr-3 px-3 py-1.5 bg-mc-bg-secondary text-mc-text text-xs rounded-lg border border-mc-border opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
           Chat with Eve 💬
         </span>
       </button>
@@ -273,8 +273,8 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
   if (isMinimized) {
     return (
       <div className="fixed bottom-6 right-6 z-50 bg-mc-bg-secondary border border-mc-border rounded-lg shadow-xl flex items-center gap-3 px-4 py-2">
-        <span className="text-lg">🤖</span>
-        <span className="text-sm font-medium">Eve Chat</span>
+        <span className="text-base">🤖</span>
+        <span className="text-xs font-medium">Eve Chat</span>
         {messages.length > 0 && (
           <span className="bg-mc-accent text-mc-bg text-xs px-2 py-0.5 rounded-full">
             {messages.length}
@@ -310,7 +310,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-mc-accent-green rounded-full border-2 border-mc-bg-secondary" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Eve</h3>
+            <h3 className="font-semibold text-xs">Eve</h3>
             <p className="text-xs text-mc-text-secondary">AI Orchestrator</p>
           </div>
         </div>
@@ -337,7 +337,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <span className="text-4xl mb-3">💬</span>
-            <p className="text-mc-text-secondary text-sm">
+            <p className="text-mc-text-secondary text-xs">
               Start chatting with Eve.<br />
               She&apos;s your AI orchestrator.
             </p>
@@ -350,7 +350,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-xl px-4 py-2.5 text-sm ${
+              className={`max-w-[85%] rounded-xl px-4 py-2.5 text-xs ${
                 msg.role === 'user'
                   ? 'bg-mc-accent text-mc-bg rounded-br-sm'
                   : 'bg-mc-bg-tertiary text-mc-text rounded-bl-sm'
@@ -389,7 +389,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             <div className="bg-mc-bg-tertiary rounded-xl rounded-bl-sm px-4 py-3">
               <div className="flex items-center gap-2 text-mc-text-secondary">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Eve is typing...</span>
+                <span className="text-xs">Eve is typing...</span>
               </div>
             </div>
           </div>
@@ -415,7 +415,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             onKeyDown={handleKeyDown}
             placeholder="Message Eve..."
             rows={1}
-            className="flex-1 bg-mc-bg border border-mc-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-mc-accent max-h-24"
+            className="flex-1 bg-mc-bg border border-mc-border rounded-lg px-3 py-2 text-xs resize-none focus:outline-none focus:border-mc-accent max-h-24"
             style={{
               height: 'auto',
               minHeight: '36px',

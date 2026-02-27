@@ -155,7 +155,7 @@ export default function BrainPage() {
             </button>
             <div className="flex items-center gap-2">
               <Brain className="w-5 h-5 text-mc-accent-purple" />
-              <h1 className="text-lg font-semibold text-mc-text">2nd Brain</h1>
+              <h1 className="text-base font-semibold text-mc-text">2nd Brain</h1>
             </div>
             <span className="ml-auto text-xs text-mc-text-secondary bg-mc-bg-tertiary px-2 py-0.5 rounded-full">
               {totalDocs}
@@ -170,7 +170,7 @@ export default function BrainPage() {
               placeholder="Search documents..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-mc-bg border border-mc-border rounded-lg pl-10 pr-4 py-2 text-sm text-mc-text placeholder:text-mc-text-secondary/50 focus:outline-none focus:border-mc-accent-purple/50 focus:ring-1 focus:ring-mc-accent-purple/20 transition-all"
+              className="w-full bg-mc-bg border border-mc-border rounded-lg pl-10 pr-4 py-2 text-xs text-mc-text placeholder:text-mc-text-secondary/50 focus:outline-none focus:border-mc-accent-purple/50 focus:ring-1 focus:ring-mc-accent-purple/20 transition-all"
             />
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function BrainPage() {
               <div className="animate-spin w-5 h-5 border-2 border-mc-accent-purple border-t-transparent rounded-full" />
             </div>
           ) : Object.keys(grouped).length === 0 ? (
-            <div className="text-center py-12 text-mc-text-secondary text-sm">
+            <div className="text-center py-12 text-mc-text-secondary text-xs">
               {search ? 'No documents match your search' : 'No documents yet'}
             </div>
           ) : (
@@ -228,7 +228,7 @@ export default function BrainPage() {
                           }`}
                         >
                           <div
-                            className={`text-sm font-medium truncate ${
+                            className={`text-xs font-medium truncate ${
                               selectedId === doc.id ? 'text-mc-text' : 'text-mc-text-secondary group-hover:text-mc-text'
                             }`}
                           >
@@ -288,7 +288,7 @@ export default function BrainPage() {
               <h1 className="text-2xl font-bold text-mc-text">{selectedDoc.title}</h1>
               <div className="flex items-center gap-4 mt-2">
                 {selectedDoc.date && (
-                  <span className="flex items-center gap-1.5 text-sm text-mc-text-secondary">
+                  <span className="flex items-center gap-1.5 text-xs text-mc-text-secondary">
                     <Calendar className="w-3.5 h-3.5" />
                     {formatDate(selectedDoc.date)}
                   </span>
