@@ -535,7 +535,7 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
       </div>}
 
       <div className={`flex-1 w-full ${compact ? "p-0" : "p-2"}`}>
-        <svg viewBox="0 0 860 580" className={`w-full h-full border border-mc-border rounded-lg bg-[#0a0e14] ${compact ? "max-w-none" : ""}`} style={{ imageRendering: 'auto' }}>
+        <svg viewBox="0 0 860 580" className={`w-full h-full border border-mc-border rounded-lg bg-[#0a0e14] ${compact ? "max-w-none" : ""}`} style={{ imageRendering: 'auto' }} preserveAspectRatio="xMidYMid slice">
           <defs>
             <pattern id="floor" width="40" height="40" patternUnits="userSpaceOnUse">
               <rect width="40" height="40" fill="#141a22" />
