@@ -23,6 +23,10 @@ interface AgentConfig {
   deskH: number;
   features: string[];
   emoji: string;
+  gender?: 'male' | 'female';
+  hairColor?: string;
+  dressColor?: string;
+  skin?: string;
 }
 
 const AGENTS: AgentConfig[] = [
@@ -31,10 +35,11 @@ const AGENTS: AgentConfig[] = [
     name: 'Monalisa',
     label: 'Artist',
     color: '#db61a2',
-    seatX: 250, seatY: 138,
+    seatX: 615, seatY: 285,
     deskX: 190, deskY: 72, deskW: 120, deskH: 40,
     features: ['art-supplies'],
     emoji: '🎨',
+    gender: 'female', hairColor: '#1a0a00', dressColor: '#1a4a2a', skin: '#c49a6c',
   },
   {
     name: 'Sherlock',
@@ -62,16 +67,18 @@ const AGENTS: AgentConfig[] = [
     deskX: 540, deskY: 172, deskW: 140, deskH: 45,
     features: ['big-desk', 'nameplate'],
     emoji: '🧠',
+    gender: 'female', hairColor: '#c8962a', dressColor: '#6b35a8',
   },
   // Bottom cluster (facing desks)
   {
     name: 'Shelby',
     label: 'Strategist',
     color: '#d29922',
-    seatX: 250, seatY: 342,
+    seatX: 450, seatY: 340,
     deskX: 190, deskY: 276, deskW: 120, deskH: 40,
     features: ['charts'],
     emoji: '📊',
+    gender: 'female', hairColor: '#5c3317', dressColor: '#8b1a1a',
   },
   {
     name: 'Bluma',
@@ -86,7 +93,7 @@ const AGENTS: AgentConfig[] = [
     name: 'Goku',
     label: 'Trainer',
     color: '#ff8c00',
-    seatX: 610, seatY: 342,
+    seatX: 390, seatY: 270,
     deskX: 560, deskY: 276, deskW: 100, deskH: 38,
     features: ['small-energetic'],
     emoji: '⚡',
@@ -115,6 +122,10 @@ function Agent({
   name,
   isWalking,
   isMini,
+  gender,
+  hairColor,
+  dressColor,
+  agentSkin,
 }: {
   cx: number;
   bottomY: number;
@@ -123,13 +134,18 @@ function Agent({
   name: string;
   isWalking: boolean;
   isMini?: boolean;
+  gender?: 'male' | 'female';
+  hairColor?: string;
+  dressColor?: string;
+  agentSkin?: string;
 }) {
   const S = isMini ? 2 : PX;
   const w = 14 * S;
   const h = 22 * S;
   const x = cx - w / 2;
   const y = bottomY - h;
-  const skin = '#ffd5b8';
+  const skin = agentSkin || '#ffd5b8';
+  const isFemale = gender === 'female';
 
   const isSherlock = name === 'Sherlock';
   const isMonalisa = name === 'Monalisa';
@@ -140,11 +156,16 @@ function Agent({
       <ellipse cx={cx} cy={bottomY - h / 2} rx={w * 0.8} ry={h * 0.55} fill={color} opacity={0.12} filter="url(#glow)" />
       <ellipse cx={cx} cy={bottomY + 2} rx={w * 0.4} ry={S * 1.5} fill="rgba(0,0,0,0.3)" />
 
+      {/* Female long hair (rendered behind head) */}
+      {isFemale && hairColor && (
+        <rect x={x + 2 * S} y={y - 2 * S} width={10 * S} height={14 * S} fill={hairColor} opacity={0.9} />
+      )}
+
       {/* Hair / Hat */}
       {!isSherlock ? (
         <>
-          <rect x={x + 3 * S} y={y} width={8 * S} height={2 * S} fill={isMonalisa ? '#5b3b2b' : color} />
-          <rect x={x + 2 * S} y={y + S} width={10 * S} height={2 * S} fill={isMonalisa ? '#6a4330' : color} />
+          <rect x={x + 3 * S} y={y} width={8 * S} height={2 * S} fill={isMonalisa ? '#5b3b2b' : hairColor || (isFemale ? color : color)} />
+          <rect x={x + 2 * S} y={y + S} width={10 * S} height={2 * S} fill={isMonalisa ? '#6a4330' : hairColor || color} />
         </>
       ) : (
         <>
@@ -198,8 +219,17 @@ function Agent({
       <rect x={x} y={y + 14 * S} width={2 * S} height={2 * S} fill={skin} className={status === 'working' ? 'pixel-arm-left' : ''} />
       <rect x={x + 12 * S} y={y + 14 * S} width={2 * S} height={2 * S} fill={skin} className={status === 'working' ? 'pixel-arm-right' : ''} />
 
-      <rect x={x + 3 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill="#3d4450" className={isWalking ? 'pixel-leg-left' : ''} />
-      <rect x={x + 8 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill="#3d4450" className={isWalking ? 'pixel-leg-right' : ''} />
+      {/* Female dress / skirt */}
+      {isFemale && dressColor && (
+        <polygon
+          points={`${x + 2 * S},${y + 16 * S} ${x + 12 * S},${y + 16 * S} ${x + 14 * S},${y + 22 * S} ${x},${y + 22 * S}`}
+          fill={dressColor}
+          opacity={0.9}
+        />
+      )}
+
+      <rect x={x + 3 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill={isFemale && dressColor ? dressColor : '#3d4450'} opacity={isFemale ? 0.5 : 1} className={isWalking ? 'pixel-leg-left' : ''} />
+      <rect x={x + 8 * S} y={y + 16 * S} width={3 * S} height={4 * S} fill={isFemale && dressColor ? dressColor : '#3d4450'} opacity={isFemale ? 0.5 : 1} className={isWalking ? 'pixel-leg-right' : ''} />
       <rect x={x + 2 * S} y={y + 20 * S} width={4 * S} height={2 * S} fill="#222" className={isWalking ? 'pixel-leg-left' : ''} />
       <rect x={x + 8 * S} y={y + 20 * S} width={4 * S} height={2 * S} fill="#222" className={isWalking ? 'pixel-leg-right' : ''} />
 
@@ -543,6 +573,10 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
               <rect x="20" y="20" width="20" height="20" fill="#161e28" />
             </pattern>
             <filter id="glow"><feGaussianBlur stdDeviation="3" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+            <linearGradient id="tvGlow" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#4488ff" stopOpacity="0.3"/>
+              <stop offset="100%" stopColor="#0033cc" stopOpacity="0.1"/>
+            </linearGradient>
           </defs>
 
           <rect width="860" height="580" fill="url(#floor)" />
@@ -611,7 +645,7 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
             const pos = positions.get(a.name);
             if (!pos) return null;
             return (
-              <Agent key={a.name} cx={pos.cx} bottomY={pos.by} color={a.color} status={getStatus(a.name)} name={a.name} isWalking={walking.has(a.name)} />
+              <Agent key={a.name} cx={pos.cx} bottomY={pos.by} color={a.color} status={getStatus(a.name)} name={a.name} isWalking={walking.has(a.name)} gender={a.gender} hairColor={a.hairColor} dressColor={a.dressColor} agentSkin={a.skin} />
             );
           })}
 
@@ -640,6 +674,30 @@ export function PixelOffice({ compact = false }: { compact?: boolean } = {}) {
             }
             return null;
           })}
+
+          {/* LOUNGE ZONE */}
+          {/* พรม */}
+          <ellipse cx="550" cy="420" rx="190" ry="85" fill="#1a1a2e" opacity="0.7"/>
+          {/* โซฟา L-shape แนวนอน */}
+          <rect x="390" y="360" width="290" height="65" rx="8" fill="#2a1f3d"/>
+          <rect x="390" y="340" width="290" height="25" rx="4" fill="#1a1228"/>
+          <rect x="390" y="360" width="290" height="30" rx="4" fill="#3d2d5a"/>
+          {/* โซฟา L-shape แนวตั้ง */}
+          <rect x="640" y="260" width="65" height="165" rx="8" fill="#2a1f3d"/>
+          <rect x="660" y="260" width="25" height="165" rx="4" fill="#1a1228"/>
+          <rect x="640" y="260" width="40" height="165" rx="4" fill="#3d2d5a"/>
+          {/* TV ผนังขวา */}
+          <rect x="790" y="175" width="55" height="90" rx="4" fill="#1a1a1a" stroke="#444" strokeWidth="2"/>
+          <rect x="795" y="180" width="45" height="72" rx="2" fill="#050518"/>
+          <rect x="795" y="180" width="45" height="72" rx="2" fill="url(#tvGlow)" opacity="0.6"/>
+          <rect x="807" y="267" width="20" height="12" fill="#333"/>
+          {/* เก้าอี้ 2 ตัว */}
+          <rect x="375" y="270" width="48" height="48" rx="6" fill="#1e2d1e"/>
+          <rect x="375" y="262" width="48" height="12" rx="4" fill="#162416"/>
+          <rect x="490" y="245" width="48" height="48" rx="6" fill="#1e2d1e"/>
+          <rect x="490" y="237" width="48" height="12" rx="4" fill="#162416"/>
+          {/* Label */}
+          <text x="400" y="230" fontSize="8" fill="#666" fontFamily="monospace" letterSpacing="2">LOUNGE ZONE</text>
         </svg>
       </div>
 
