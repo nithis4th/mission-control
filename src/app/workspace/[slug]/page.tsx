@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { Header } from '@/components/Header';
+import { Sidebar } from '@/components/Sidebar';
 import { AgentsSidebar } from '@/components/AgentsSidebar';
 import { MissionQueue } from '@/components/MissionQueue';
 import { LiveFeed } from '@/components/LiveFeed';
@@ -18,7 +18,7 @@ import type { Task, Workspace } from '@/lib/types';
 export default function WorkspacePage() {
   const params = useParams();
   const slug = params.slug as string;
-  
+
   const {
     setAgents,
     setTasks,
@@ -30,6 +30,7 @@ export default function WorkspacePage() {
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [activeTab, setActiveTab] = useState('agents');
 
   // Connect to SSE for real-time updates
   useSSE();
@@ -61,13 +62,13 @@ export default function WorkspacePage() {
   // Load workspace-specific data
   useEffect(() => {
     if (!workspace) return;
-    
+
     const workspaceId = workspace.id;
 
     async function loadData() {
       try {
         debug.api('Loading workspace data...', { workspaceId });
-        
+
         // Fetch workspace-scoped data
         const [agentsRes, tasksRes, eventsRes] = await Promise.all([
           fetch(`/api/agents?workspace_id=${workspaceId}`),
@@ -110,10 +111,7 @@ export default function WorkspacePage() {
     loadData();
     checkOpenClaw();
 
-    // SSE is the primary real-time mechanism - these are fallback polls with longer intervals
-    // to reduce server load while providing redundancy
-
-    // Poll for events every 30 seconds (SSE fallback - increased from 5s)
+    // SSE is the primary real-time mechanism - these are fallback polls
     const eventPoll = setInterval(async () => {
       try {
         const res = await fetch('/api/events?limit=20');
@@ -123,9 +121,8 @@ export default function WorkspacePage() {
       } catch (error) {
         console.error('Failed to poll events:', error);
       }
-    }, 30000); // Increased from 5000 to 30000
+    }, 30000);
 
-    // Poll tasks as SSE fallback every 60 seconds (increased from 10s)
     const taskPoll = setInterval(async () => {
       try {
         const res = await fetch(`/api/tasks?workspace_id=${workspaceId}`);
@@ -133,9 +130,10 @@ export default function WorkspacePage() {
           const newTasks: Task[] = await res.json();
           const currentTasks = useMissionControl.getState().tasks;
 
-          const hasChanges = newTasks.length !== currentTasks.length ||
+          const hasChanges =
+            newTasks.length !== currentTasks.length ||
             newTasks.some((t) => {
-              const current = currentTasks.find(ct => ct.id === t.id);
+              const current = currentTasks.find((ct) => ct.id === t.id);
               return !current || current.status !== t.status;
             });
 
@@ -147,9 +145,8 @@ export default function WorkspacePage() {
       } catch (error) {
         console.error('Failed to poll tasks:', error);
       }
-    }, 60000); // Increased from 10000 to 60000
+    }, 60000);
 
-    // Check OpenClaw connection every 30 seconds (kept as-is for monitoring)
     const connectionCheck = setInterval(async () => {
       try {
         const res = await fetch('/api/openclaw/status');
@@ -202,25 +199,63 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-mc-bg overflow-hidden">
-      <Header workspace={workspace} />
+    <div className="h-screen flex bg-mc-bg overflow-hidden">
+      {/* Left Sidebar Navigation */}
+      <Sidebar
+        workspaceSlug={workspace.slug}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Agents Sidebar */}
-        <AgentsSidebar workspaceId={workspace.id} />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {/* Tab Content */}
+        {activeTab === 'agents' && (
+          <div className="flex-1 flex overflow-hidden">
+            {/* Agents Sidebar */}
+            <AgentsSidebar workspaceId={workspace.id} />
+            {/* Main Content Area */}
+            <MissionQueue workspaceId={workspace.id} />
+            {/* Live Feed */}
+            <LiveFeed />
+          </div>
+        )}
 
-        {/* Main Content Area */}
-        <MissionQueue workspaceId={workspace.id} />
+        {activeTab === 'chat' && (
+          <div className="flex-1 overflow-hidden">
+            <ChatPanel fullPage />
+          </div>
+        )}
 
-        {/* Live Feed */}
-        <LiveFeed />
+        {activeTab === 'activity' && (
+          <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
+              <LiveFeed expanded />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-6xl mb-4">📜</div>
+              <h2 className="text-xl font-bold mb-2">Chat History</h2>
+              <p className="text-mc-text-secondary">
+                Browse past conversations by topic.
+              </p>
+              <p className="text-mc-text-secondary text-sm mt-2">
+                Coming soon...
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Debug Panel - only shows when debug mode enabled */}
       <SSEDebugPanel />
 
-      {/* Floating Chat with Eve */}
-      <ChatPanel />
+      {/* Floating Chat with Eve — only on non-chat tabs */}
+      {activeTab !== 'chat' && <ChatPanel />}
     </div>
   );
 }

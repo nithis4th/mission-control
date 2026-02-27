@@ -8,7 +8,11 @@ import { formatDistanceToNow } from 'date-fns';
 
 type FeedFilter = 'all' | 'tasks' | 'agents';
 
-export function LiveFeed() {
+interface LiveFeedProps {
+  expanded?: boolean;
+}
+
+export function LiveFeed({ expanded = false }: LiveFeedProps) {
   const { events } = useMissionControl();
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [isMinimized, setIsMinimized] = useState(false);
@@ -65,6 +69,46 @@ export function LiveFeed() {
         return 'text-mc-text-secondary';
     }
   };
+
+  // Expanded mode — full-page activity view
+  if (expanded) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="p-6 border-b border-mc-border bg-mc-bg-secondary">
+          <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+            <span>📊</span> Activity Feed
+          </h2>
+          <div className="flex gap-2">
+            {(['all', 'tasks', 'agents'] as FeedFilter[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`px-4 py-1.5 text-sm rounded-lg uppercase ${
+                  filter === tab
+                    ? 'bg-mc-accent text-mc-bg font-medium'
+                    : 'text-mc-text-secondary hover:bg-mc-bg-tertiary border border-mc-border'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-2">
+          {filteredEvents.length === 0 ? (
+            <div className="text-center py-16 text-mc-text-secondary">
+              <div className="text-4xl mb-3">📭</div>
+              <p>No activity events yet</p>
+            </div>
+          ) : (
+            filteredEvents.map((event) => (
+              <EventItem key={event.id} event={event} />
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <aside

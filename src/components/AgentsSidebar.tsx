@@ -14,7 +14,7 @@ interface AgentsSidebarProps {
 }
 
 export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
-  const { agents, selectedAgent, setSelectedAgent, agentOpenClawSessions, setAgentOpenClawSession } = useMissionControl();
+  const { agents, selectedAgent, setSelectedAgent, agentOpenClawSessions, setAgentOpenClawSession, updateAgent } = useMissionControl();
   const [filter, setFilter] = useState<FilterTab>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -22,8 +22,47 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
   const [connectingAgentId, setConnectingAgentId] = useState<string | null>(null);
   const [activeSubAgents, setActiveSubAgents] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [liveAgentIds, setLiveAgentIds] = useState<Set<string>>(new Set());
 
   const toggleMinimize = () => setIsMinimized(!isMinimized);
+
+  // Poll live Gateway sessions to determine real agent status
+  useEffect(() => {
+    const pollLiveSessions = async () => {
+      try {
+        const res = await fetch('/api/openclaw/sessions');
+        if (!res.ok) return;
+        const data = await res.json();
+        // Gateway returns { sessions: { sessions: [...] } } or { sessions: [...] }
+        let sessionsList: Array<{ key?: string }> = [];
+        if (data?.sessions?.sessions && Array.isArray(data.sessions.sessions)) {
+          sessionsList = data.sessions.sessions;
+        } else if (Array.isArray(data?.sessions)) {
+          sessionsList = data.sessions;
+        }
+        
+        // Extract agent IDs from session keys (format: "agent:{agentId}:...")
+        const activeIds = new Set<string>();
+        for (const session of sessionsList) {
+          const key = session.key || '';
+          const match = key.match(/^agent:([^:]+):/);
+          if (match) {
+            activeIds.add(match[1].toLowerCase());
+          }
+        }
+        setLiveAgentIds(activeIds);
+        setActiveSubAgents(
+          sessionsList.filter(s => (s.key || '').includes(':subagent:')).length
+        );
+      } catch (error) {
+        console.error('Failed to poll live sessions:', error);
+      }
+    };
+
+    pollLiveSessions();
+    const interval = setInterval(pollLiveSessions, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Load OpenClaw session status for all agents on mount
   const loadOpenClawSessions = useCallback(async () => {
@@ -48,26 +87,7 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
     }
   }, [loadOpenClawSessions, agents.length]);
 
-  // Load active sub-agent count
-  useEffect(() => {
-    const loadSubAgentCount = async () => {
-      try {
-        const res = await fetch('/api/openclaw/sessions?session_type=subagent&status=active');
-        if (res.ok) {
-          const sessions = await res.json();
-          setActiveSubAgents(sessions.length);
-        }
-      } catch (error) {
-        console.error('Failed to load sub-agent count:', error);
-      }
-    };
-
-    loadSubAgentCount();
-
-    // Poll every 30 seconds (reduced from 10s to reduce load)
-    const interval = setInterval(loadSubAgentCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  // Sub-agent count is now derived from live session polling above
 
   const handleConnectToOpenClaw = async (agent: Agent, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent selecting the agent
@@ -101,9 +121,20 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
     }
   };
 
+  // Derive real status from live Gateway sessions
+  const getAgentLiveStatus = useCallback((agent: Agent): AgentStatus => {
+    // Check if agent has active sessions in Gateway
+    const agentId = (agent.gateway_agent_id || agent.name || '').toLowerCase();
+    if (agentId && liveAgentIds.has(agentId)) {
+      return 'working';
+    }
+    return 'standby';
+  }, [liveAgentIds]);
+
   const filteredAgents = agents.filter((agent) => {
     if (filter === 'all') return true;
-    return agent.status === filter;
+    const liveStatus = getAgentLiveStatus(agent);
+    return liveStatus === filter;
   });
 
   const getStatusBadge = (status: AgentStatus) => {
@@ -205,8 +236,8 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
                   {/* Status indicator */}
                   <span
                     className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
-                      agent.status === 'working' ? 'bg-mc-accent-green' :
-                      agent.status === 'standby' ? 'bg-mc-text-secondary' :
+                      getAgentLiveStatus(agent) === 'working' ? 'bg-mc-accent-green' :
+                      getAgentLiveStatus(agent) === 'standby' ? 'bg-mc-text-secondary' :
                       'bg-gray-500'
                     }`}
                   />
@@ -261,13 +292,13 @@ export function AgentsSidebar({ workspaceId }: AgentsSidebarProps) {
                   </div>
                 </div>
 
-                {/* Status */}
+                {/* Status - derived from live Gateway sessions */}
                 <span
                   className={`text-xs px-2 py-0.5 rounded uppercase ${getStatusBadge(
-                    agent.status
+                    getAgentLiveStatus(agent)
                   )}`}
                 >
-                  {agent.status}
+                  {getAgentLiveStatus(agent)}
                 </span>
               </button>
 

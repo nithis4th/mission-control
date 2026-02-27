@@ -11,7 +11,11 @@ interface ChatMessage {
   status?: 'sending' | 'sent' | 'error' | 'timeout';
 }
 
-export function ChatPanel() {
+interface ChatPanelProps {
+  fullPage?: boolean;
+}
+
+export function ChatPanel({ fullPage = false }: ChatPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -116,6 +120,136 @@ export function ChatPanel() {
       sendMessage();
     }
   };
+
+  // Full page mode — embedded in tab layout
+  if (fullPage) {
+    return (
+      <div className="h-full flex flex-col bg-mc-bg">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-mc-border bg-mc-bg-secondary">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <span className="text-3xl">🤖</span>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-mc-accent-green rounded-full border-2 border-mc-bg-secondary" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg">Chat with Eve</h2>
+              <p className="text-xs text-mc-text-secondary">AI Orchestrator — Direct Message</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-3xl mx-auto space-y-4">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-center py-20">
+                <span className="text-6xl mb-4">💬</span>
+                <h3 className="text-lg font-semibold mb-2">Start a conversation with Eve</h3>
+                <p className="text-mc-text-secondary text-sm max-w-md">
+                  Eve is your AI orchestrator. Ask her to manage tasks, coordinate agents, or get status updates on your projects.
+                </p>
+              </div>
+            )}
+
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-xl px-5 py-3 text-sm ${
+                    msg.role === 'user'
+                      ? 'bg-mc-accent text-mc-bg rounded-br-sm'
+                      : 'bg-mc-bg-secondary border border-mc-border text-mc-text rounded-bl-sm'
+                  }`}
+                >
+                  <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                  <div
+                    className={`flex items-center gap-2 mt-1.5 text-[10px] ${
+                      msg.role === 'user' ? 'text-mc-bg/60' : 'text-mc-text-secondary'
+                    }`}
+                  >
+                    <span>
+                      {msg.timestamp.toLocaleTimeString('th-TH', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                    {msg.status === 'sending' && (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    )}
+                    {msg.status === 'error' && (
+                      <span className="text-mc-accent-red">Failed</span>
+                    )}
+                    {msg.status === 'timeout' && (
+                      <span className="text-mc-accent-yellow">Thinking...</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {isSending && (
+              <div className="flex justify-start">
+                <div className="bg-mc-bg-secondary border border-mc-border rounded-xl rounded-bl-sm px-5 py-3">
+                  <div className="flex items-center gap-2 text-mc-text-secondary">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Eve is typing...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Error banner */}
+        {error && (
+          <div className="px-6 py-2 bg-mc-accent-red/10 border-t border-mc-accent-red/20">
+            <p className="text-xs text-mc-accent-red">{error}</p>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="border-t border-mc-border px-6 py-4 bg-mc-bg-secondary">
+          <div className="max-w-3xl mx-auto flex items-end gap-3">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Message Eve..."
+              rows={1}
+              className="flex-1 bg-mc-bg border border-mc-border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-mc-accent max-h-32"
+              style={{
+                height: 'auto',
+                minHeight: '44px',
+              }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+              }}
+              disabled={isSending}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim() || isSending}
+              className="p-3 bg-mc-accent text-mc-bg rounded-xl hover:bg-mc-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+            >
+              {isSending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Floating button when closed
   if (!isOpen) {

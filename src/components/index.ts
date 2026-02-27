@@ -1,4 +1,5 @@
 export { Header } from './Header';
+export { Sidebar } from './Sidebar';
 export { AgentsSidebar } from './AgentsSidebar';
 export { AgentModal } from './AgentModal';
 export { AgentStatsTab } from './AgentStatsTab';
