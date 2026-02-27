@@ -19,6 +19,7 @@ import {
   DollarSign,
   Clock,
   Wrench,
+  ShoppingBag,
 } from 'lucide-react';
 import { useMissionControl } from '@/lib/store';
 
@@ -105,6 +106,12 @@ const navItems: NavItem[] = [
     label: 'Skills',
     emoji: '🔧',
     icon: <Wrench className="w-3.5 h-3.5" />,
+  },
+  {
+    id: 'intimo',
+    label: 'Intimo BI',
+    emoji: '💜',
+    icon: <ShoppingBag className="w-3.5 h-3.5" />,
   },
 ];
 

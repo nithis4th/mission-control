@@ -19,6 +19,7 @@ import { TaskTab } from '@/components/tabs/TaskTab';
 import { ContentTab } from '@/components/tabs/ContentTab';
 import { DocTab } from '@/components/tabs/DocTab';
 import { ApprovalTab } from '@/components/tabs/ApprovalTab';
+import { IntimoDashboardTab } from '@/components/tabs/IntimoDashboardTab';
 import { useMissionControl } from '@/lib/store';
 import { useSSE } from '@/hooks/useSSE';
 import { debug } from '@/lib/debug';
@@ -308,6 +309,12 @@ export default function WorkspacePage() {
         {activeTab === 'approval' && (
           <div className="flex-1 flex overflow-hidden">
             <ApprovalTab />
+          </div>
+        )}
+
+        {activeTab === 'intimo' && (
+          <div className="flex-1 flex overflow-hidden">
+            <IntimoDashboardTab />
           </div>
         )}
 
