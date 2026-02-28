@@ -109,9 +109,12 @@ export async function GET(_request: Request, { params }: RouteParams) {
             ? cli.totalTokens
             : input + output;
 
-      // fallback when only totalTokens exists
-      const fixedInput = input === 0 && output === 0 && total > 0 ? total : input;
-      const fixedOutput = input === 0 && output === 0 && total > 0 ? 0 : output;
+      // fallback when only totalTokens exists (estimate split to avoid undercounting cost)
+      const hasOnlyTotal = input === 0 && output === 0 && total > 0;
+      const estimatedOutput = hasOnlyTotal ? Math.round(total * 0.15) : output;
+      const estimatedInput = hasOnlyTotal ? Math.max(0, total - estimatedOutput) : input;
+      const fixedInput = estimatedInput;
+      const fixedOutput = estimatedOutput;
 
       totalTokensInput += fixedInput;
       totalTokensOutput += fixedOutput;
