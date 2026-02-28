@@ -1,0 +1,12 @@
+{
+  "name": "mission-control-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for Mission Control automation",
+  "type": "module",
+  "scripts": {
+    "label-analyzer": "node label-analyzer.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
