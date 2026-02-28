@@ -11,6 +11,8 @@ export interface DocSession {
   messageCount: number;
   excerpt: string;
   kind: string;
+  agentId: string;
+  agentName: string;
 }
 
 interface SessionMessage {
@@ -124,7 +126,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
                 >
                   {typeof msg.content === 'string'
                     ? msg.content.slice(0, 500) + (msg.content.length > 500 ? '...' : '')
-                    : '[complex content]'}
+                    : '[non-text content omitted]'}
                 </div>
                 {msg.role === 'user' && (
                   <div className="w-6 h-6 rounded-full bg-mc-accent-purple/20 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
@@ -210,6 +212,16 @@ export function DocTab() {
     yesterday: filtered.filter((s) => s.dateLabel === 'yesterday'),
     earlier:   filtered.filter((s) => s.dateLabel === 'earlier'),
   };
+
+  const byAgent = useMemo(() => {
+    const map: Record<string, DocSession[]> = {};
+    for (const s of filtered) {
+      const key = s.agentName || s.agentId || 'Unknown';
+      if (!map[key]) map[key] = [];
+      map[key].push(s);
+    }
+    return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
+  }, [filtered]);
 
   if (loading) {
     return (

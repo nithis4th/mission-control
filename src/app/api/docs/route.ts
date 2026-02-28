@@ -13,23 +13,35 @@ interface RawSession {
   totalTokens?: number;
   agentId?: string;
   sessionId?: string;
-  transcriptPath?: string;
 }
 
 interface SessionsJson {
   sessions?: RawSession[];
+  stores?: Array<{ sessions?: RawSession[] }>;
 }
 
 export interface DocSession {
   key: string;
   sessionId?: string;
-  date: string;         // ISO date string
+  date: string;
   dateLabel: 'today' | 'yesterday' | 'earlier';
   model: string;
-  messageCount: number; // estimated from tokens
-  excerpt: string;      // last user message preview
+  messageCount: number;
+  excerpt: string;
   kind: string;
+  agentId: string;
+  agentName: string;
 }
+
+const AGENT_NAME: Record<string, string> = {
+  main: 'Eve',
+  dexter: 'Dexter',
+  sherlock: 'Sherlock',
+  shelby: 'Shelby',
+  bluma: 'Bluma',
+  goku: 'Goku',
+  monalisa: 'Monalisa',
+};
 
 function getDateLabel(dateStr: string): 'today' | 'yesterday' | 'earlier' {
   const today = new Date().toISOString().slice(0, 10);
@@ -41,48 +53,50 @@ function getDateLabel(dateStr: string): 'today' | 'yesterday' | 'earlier' {
 
 function shortModelName(model: string): string {
   if (!model) return 'unknown';
-  // e.g. "openrouter/anthropic/claude-sonnet-4-6" → "claude-sonnet-4-6"
   const parts = model.split('/');
   return parts[parts.length - 1] || model;
 }
 
 function estimateMessages(tokens: number | undefined): number {
-  // rough: average ~200 tokens per message exchange
   if (!tokens) return 0;
   return Math.max(1, Math.round(tokens / 200));
 }
 
-function getExcerpt(key: string): string {
-  // Try to read transcript for last message
-  try {
-    const agentId = key.split(':')[1] || 'main';
-    const sessionsPath = `/Users/nithis4th/.openclaw/agents/${agentId}/sessions/sessions.json`;
-    // We can't read individual session transcripts without more info
-    // Just return key-based excerpt
-    const parts = key.split(':');
-    if (parts[2] === 'telegram' && parts[3] === 'direct') {
-      return 'แชทกับ Eve ผ่าน Telegram';
-    }
-    if (parts[2] === 'cron') {
-      return 'Cron job session';
-    }
-    if (parts[2] === 'telegram' && parts[3] === 'group') {
-      return 'Group chat session';
-    }
-    if (parts[2] === 'openai') {
-      return 'OpenAI-compatible session';
-    }
-    return sessionsPath ? 'Direct session' : key;
-  } catch {
-    return key;
-  }
+function parseAgentIdFromKey(key: string): string {
+  const parts = key.split(':');
+  return (parts[1] || 'main').toLowerCase();
+}
+
+function isHumanChatSession(s: RawSession): boolean {
+  const key = s.key || '';
+  if (!key) return false;
+
+  // keep human-like conversations; drop cron/system/group noise
+  if (key.includes(':cron:')) return false;
+  if (key.includes(':group:')) return false;
+  if (s.kind === 'group') return false;
+
+  // direct channels and web/openai user chats
+  if (key.includes(':direct:')) return true;
+  if (key.includes(':openai-user:')) return true;
+  if (key.includes(':openai:')) return true;
+  if (s.kind === 'direct') return true;
+
+  return false;
+}
+
+function getExcerpt(key: string, agentName: string): string {
+  if (key.includes(':direct:')) return `แชทตรงกับ ${agentName}`;
+  if (key.includes(':openai-user:')) return `แชทผ่าน Mission Dashboard กับ ${agentName}`;
+  if (key.includes(':openai:')) return `แชท API กับ ${agentName}`;
+  return `แชทกับ ${agentName}`;
 }
 
 export async function GET() {
   try {
     let raw = '';
     try {
-      raw = execSync('openclaw sessions --agent main --json 2>/dev/null', {
+      raw = execSync('openclaw sessions --all-agents --json 2>/dev/null', {
         timeout: 10000,
         encoding: 'utf-8',
       });
@@ -90,24 +104,27 @@ export async function GET() {
       return NextResponse.json({ sessions: [], error: 'openclaw not available' });
     }
 
-    if (!raw.trim()) {
-      return NextResponse.json({ sessions: [] });
-    }
+    if (!raw.trim()) return NextResponse.json({ sessions: [] });
 
     const parsed: SessionsJson = JSON.parse(raw);
-    const allSessions: RawSession[] = parsed.sessions || [];
+    const allSessions: RawSession[] = [];
 
-    // Filter: direct sessions only (kind === 'direct' or key contains 'direct')
-    const directSessions = allSessions.filter(
-      (s) =>
-        s.kind === 'direct' ||
-        s.key.includes(':direct:') ||
-        (s.key.includes('telegram') && !s.key.includes('group') && !s.key.includes('cron'))
-    );
+    if (Array.isArray(parsed.sessions)) allSessions.push(...parsed.sessions);
+    if (Array.isArray(parsed.stores)) {
+      for (const store of parsed.stores) {
+        if (Array.isArray(store.sessions)) allSessions.push(...store.sessions);
+      }
+    }
 
-    const sessions: DocSession[] = directSessions.map((s) => {
-      const ts = s.updatedAt ? new Date(s.updatedAt) : new Date();
+    const chatSessions = allSessions.filter(isHumanChatSession);
+
+    const sessions: DocSession[] = chatSessions.map((s) => {
+      const tsRaw = s.updatedAt || Date.now();
+      const tsMs = tsRaw < 1e12 ? tsRaw * 1000 : tsRaw;
+      const ts = new Date(tsMs);
       const dateStr = ts.toISOString().slice(0, 10);
+      const agentId = (s.agentId || parseAgentIdFromKey(s.key)).toLowerCase();
+      const agentName = AGENT_NAME[agentId] || agentId;
 
       return {
         key: s.key,
@@ -116,12 +133,13 @@ export async function GET() {
         dateLabel: getDateLabel(dateStr),
         model: shortModelName(s.model || ''),
         messageCount: estimateMessages(s.totalTokens || s.inputTokens),
-        excerpt: getExcerpt(s.key),
+        excerpt: getExcerpt(s.key, agentName),
         kind: s.kind || 'direct',
+        agentId,
+        agentName,
       };
     });
 
-    // Sort newest first
     sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return NextResponse.json({ sessions });
