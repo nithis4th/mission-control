@@ -113,7 +113,11 @@ export async function appendArchiveFromSession(sessionKey: string, messages: Raw
   }
 }
 
-export async function readAgentArchive(agentId: string, limit = 2000): Promise<ArchivedMessage[]> {
+export async function readAgentArchive(
+  agentId: string,
+  limit = 2000,
+  offset = 0,
+): Promise<{ rows: ArchivedMessage[]; total: number }> {
   const file = archivePath(agentId.toLowerCase());
   try {
     const raw = await fs.readFile(file, 'utf-8');
@@ -126,9 +130,11 @@ export async function readAgentArchive(agentId: string, limit = 2000): Promise<A
         // ignore
       }
     }
-    rows.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    return rows.slice(-limit);
+    // newest first for pagination
+    rows.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const total = rows.length;
+    return { rows: rows.slice(offset, offset + limit), total };
   } catch {
-    return [];
+    return { rows: [], total: 0 };
   }
 }
