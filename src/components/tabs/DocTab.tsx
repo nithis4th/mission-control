@@ -262,6 +262,30 @@ export function DocTab() {
             </button>
           </div>
 
+
+
+          {/* Agent Filters */}
+          <div className="mt-3 rounded-xl border border-mc-border bg-mc-bg-secondary p-3">
+            <div className="text-[11px] text-mc-text-secondary mb-2">Filter by Agent</div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setAgentFilter('all')}
+                className={`text-[10px] px-2 py-1 rounded border transition-colors ${agentFilter === 'all' ? 'border-mc-accent/50 text-mc-accent bg-mc-accent/10' : 'border-mc-border bg-mc-bg text-mc-text-secondary hover:text-mc-text'}`}
+              >
+                All · {sessions.length}
+              </button>
+              {byAgent.map(([name, rows]) => (
+                <button
+                  key={name}
+                  onClick={() => setAgentFilter(name)}
+                  className={`text-[10px] px-2 py-1 rounded border transition-colors ${agentFilter === name ? 'border-mc-accent/50 text-mc-accent bg-mc-accent/10' : 'border-mc-border bg-mc-bg text-mc-text-secondary hover:text-mc-text'}`}
+                >
+                  {name} · {rows.length}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Search */}
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-mc-text-secondary text-sm">🔍</span>
