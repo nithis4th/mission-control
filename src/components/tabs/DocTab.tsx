@@ -17,8 +17,8 @@ export interface DocSession {
 
 interface SessionMessage {
   role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp?: string;
+  content: unknown;
+  timestamp?: string | number;
 }
 
 const DATE_LABEL_MAP = {
@@ -35,6 +35,29 @@ function formatDateTime(isoStr: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+
+
+function extractTextContent(content: unknown): string {
+  if (typeof content === 'string') return content.trim();
+  if (Array.isArray(content)) {
+    const text = content
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (!item || typeof item !== 'object') return '';
+        const rec = item as Record<string, unknown>;
+        const type = String(rec.type || '');
+        // keep only plain text blocks; drop thinking/tool payloads
+        if (type && type !== 'text') return '';
+        return typeof rec.text === 'string' ? rec.text : '';
+      })
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return text;
+  }
+  return '';
 }
 
 function shortKey(key: string): string {
@@ -97,7 +120,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
             <div className="flex items-center justify-center py-12">
               <div className="text-mc-text-secondary text-sm animate-pulse">Loading history...</div>
             </div>
-          ) : messages.filter((m) => m.role !== 'system').length === 0 ? (
+          ) : messages.map((m) => ({ ...m, plainText: extractTextContent(m.content) })).filter((m) => m.role !== 'system' && m.plainText).length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="text-3xl mb-2">💬</div>
@@ -105,7 +128,11 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
               </div>
             </div>
           ) : (
-            messages.filter((m) => m.role !== 'system').slice(-20).map((msg, i) => (
+            messages
+              .map((m) => ({ ...m, plainText: extractTextContent(m.content) }))
+              .filter((m) => m.role !== 'system' && m.plainText)
+              .slice(-20)
+              .map((msg, i) => (
               <div
                 key={i}
                 className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -124,27 +151,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
                       : 'bg-mc-bg-tertiary text-mc-text border border-mc-border'
                   }`}
                 >
-                  {(() => {
-                    const c = msg.content as unknown;
-                    if (typeof c === 'string') {
-                      return c.slice(0, 500) + (c.length > 500 ? '...' : '');
-                    }
-                    if (Array.isArray(c)) {
-                      const texts = c
-                        .map((x) => {
-                          if (typeof x === 'string') return x;
-                          if (x && typeof x === 'object' && 'text' in (x as Record<string, unknown>)) {
-                            return String((x as Record<string, unknown>).text || '');
-                          }
-                          return '';
-                        })
-                        .filter(Boolean)
-                        .join(' ')
-                        .trim();
-                      if (texts) return texts.slice(0, 500) + (texts.length > 500 ? '...' : '');
-                    }
-                    return '[non-text content omitted]';
-                  })()}
+                  {msg.plainText.slice(0, 500) + (msg.plainText.length > 500 ? "..." : "")}
                   {msg.timestamp && (
                     <div className="mt-1 text-[10px] opacity-60">
                       {formatDateTime(typeof msg.timestamp === 'string' ? msg.timestamp : new Date(msg.timestamp).toISOString())}
