@@ -120,7 +120,15 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
             <div className="flex items-center justify-center py-12">
               <div className="text-mc-text-secondary text-sm animate-pulse">Loading history...</div>
             </div>
-          ) : messages.map((m) => ({ ...m, plainText: extractTextContent(m.content) })).filter((m) => m.role !== 'system' && m.plainText).length === 0 ? (
+          ) : messages
+              .map((m) => ({ ...m, plainText: extractTextContent(m.content) }))
+              .filter((m) => {
+                if (m.role === 'system') return false;
+                const t = String(m.plainText || '').trim();
+                if (!t) return false;
+                if (t.startsWith('System: [') && t.includes('Exec')) return false;
+                return true;
+              }).length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="text-3xl mb-2">💬</div>
@@ -130,7 +138,16 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
           ) : (
             messages
               .map((m) => ({ ...m, plainText: extractTextContent(m.content) }))
-              .filter((m) => m.role !== 'system' && m.plainText)
+              .filter((m) => {
+                if (m.role === 'system') return false;
+                const t = String(m.plainText || '').trim();
+                if (!t) return false;
+                // Drop OpenClaw runtime/system log noise
+                if (t.startsWith('System: [') && t.includes('Exec completed')) return false;
+                if (t.startsWith('System: [') && t.includes('Exec failed')) return false;
+                if (t.startsWith('System: [') && t.includes('Exec')) return false;
+                return true;
+              })
               .slice(-20)
               .map((msg, i) => (
               <div
