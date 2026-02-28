@@ -61,6 +61,7 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
       setIsRefreshing(true);
       setRefreshingTick((x) => x + 1);
       setRefreshCount((x) => x + 1);
+      setShowRefreshDone(false);
     }
 
     try {
@@ -326,7 +327,7 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
               <div className="text-xs text-mc-text-secondary truncate mt-0.5">Model: {agent.model} · Active: {formatAgo(agent.lastActiveAt)}</div>
               <div className="flex items-center gap-3 text-[10px] text-mc-text-secondary mt-1">
                 <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border">Today: {agent.todayTokens?.toLocaleString() || 0} tok</span>
-                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border text-mc-accent-green">${(agent.todayCost || 0).toFixed(4)}</span>
+                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border text-mc-accent-green">Cost: ${(agent.todayCost || 0).toFixed(4)}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">

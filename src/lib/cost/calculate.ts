@@ -20,7 +20,7 @@ const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   gemini: { input: 1.25, output: 5 },
 };
 
-function getPricing(model: string) {
+export function getPricing(model: string) {
   const m = model.toLowerCase();
   for (const [key, price] of Object.entries(MODEL_PRICES)) {
     if (m.includes(key)) return price;
@@ -28,7 +28,7 @@ function getPricing(model: string) {
   return { input: 3, output: 15 };
 }
 
-function calcCost(model: string, inputTokens: number, outputTokens: number): number {
+export function calcCost(model: string, inputTokens: number, outputTokens: number): number {
   const pricing = getPricing(model);
   return (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output;
 }

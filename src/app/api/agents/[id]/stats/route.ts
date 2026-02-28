@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { listSessions, type GatewaySession } from '@/lib/openclaw/gateway-http';
 import { queryOne } from '@/lib/db';
 import { execSync } from 'child_process';
+import { calcCost } from '@/lib/cost/calculate';
 import type { Agent } from '@/lib/types';
 
 interface RouteParams {
@@ -131,16 +132,17 @@ export async function GET(_request: Request, { params }: RouteParams) {
       modelsUsed.add(agent.model);
     }
 
-    const estimatedCost = estimateTokenCost(
+    const modelForCost = Array.from(modelsUsed)[0] || "unknown";
+    const estimatedCost = calcCost(
+      modelForCost,
       totalTokensInput,
       totalTokensOutput,
-      Array.from(modelsUsed)[0],
     );
 
-    const todayCost = estimateTokenCost(
+    const todayCost = calcCost(
+      modelForCost,
       todayTokensInput,
       todayTokensOutput,
-      Array.from(modelsUsed)[0],
     );
 
     return NextResponse.json({
@@ -170,37 +172,4 @@ export async function GET(_request: Request, { params }: RouteParams) {
       { status: 500 },
     );
   }
-}
-
-function estimateTokenCost(
-  inputTokens: number,
-  outputTokens: number,
-  model?: string,
-): number {
-  const pricing: Record<string, [number, number]> = {
-    'claude-sonnet-4-6': [3, 15],
-    'claude-sonnet-4': [3, 15],
-    'claude-opus-4': [15, 75],
-    'claude-opus-4.6': [15, 75],
-    'claude-3.5-sonnet': [3, 15],
-    'claude-3-opus': [15, 75],
-    'gpt-4o': [2.5, 10],
-    'gpt-4o-mini': [0.15, 0.6],
-    'minimax-m2.5': [0.5, 1.5],
-  };
-
-  let inputRate = 3;
-  let outputRate = 15;
-
-  if (model) {
-    for (const [key, [iRate, oRate]] of Object.entries(pricing)) {
-      if (model.includes(key)) {
-        inputRate = iRate;
-        outputRate = oRate;
-        break;
-      }
-    }
-  }
-
-  return (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000;
 }
