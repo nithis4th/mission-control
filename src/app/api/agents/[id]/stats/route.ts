@@ -135,18 +135,43 @@ export async function GET(_request: Request, { params }: RouteParams) {
       modelsUsed.add(agent.model);
     }
 
-    const modelForCost = Array.from(modelsUsed)[0] || "unknown";
-    const estimatedCost = calcCost(
-      modelForCost,
-      totalTokensInput,
-      totalTokensOutput,
-    );
+    let estimatedCost = 0;
+    let todayCost = 0;
+    for (const session of agentSessions) {
+      const cli = cliSessionsByKey.get(session.key);
+      const model = (session.model as string) || (cli as any)?.model || Array.from(modelsUsed)[0] || 'unknown';
 
-    const todayCost = calcCost(
-      modelForCost,
-      todayTokensInput,
-      todayTokensOutput,
-    );
+      const input =
+        typeof session.inputTokens === 'number'
+          ? session.inputTokens
+          : typeof cli?.inputTokens === 'number'
+            ? cli.inputTokens
+            : 0;
+      const output =
+        typeof session.outputTokens === 'number'
+          ? session.outputTokens
+          : typeof cli?.outputTokens === 'number'
+            ? cli.outputTokens
+            : 0;
+      const total =
+        typeof session.totalTokens === 'number'
+          ? session.totalTokens
+          : typeof cli?.totalTokens === 'number'
+            ? cli.totalTokens
+            : input + output;
+
+      const hasOnlyTotal = input === 0 && output === 0 && total > 0;
+      const estimatedOutput = hasOnlyTotal ? Math.round(total * 0.15) : output;
+      const estimatedInput = hasOnlyTotal ? Math.max(0, total - estimatedOutput) : input;
+
+      const sessionCost = calcCost(model, estimatedInput, estimatedOutput);
+      estimatedCost += sessionCost;
+
+      const updatedAtMs = toMs(Number(session.updatedAt || cli?.updatedAt || 0));
+      if (updatedAtMs && now - updatedAtMs <= DAY_MS) {
+        todayCost += sessionCost;
+      }
+    }
 
     return NextResponse.json({
       agentId: id,
