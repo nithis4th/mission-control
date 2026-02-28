@@ -17,7 +17,7 @@ interface ChatPanelProps {
 
 
 const AGENT_META: Record<string, { name: string; emoji: string; subtitle: string }> = {
-  main: { name: 'Eve', emoji: '🦋', subtitle: '${targetAgent.subtitle}' },
+  main: { name: 'Eve', emoji: '🦋', subtitle: '{targetAgent.subtitle}' },
   dexter: { name: 'Dexter', emoji: '🤖', subtitle: 'CTO — Mission Dashboard & Systems' },
   sherlock: { name: 'Sherlock', emoji: '🔍', subtitle: 'Research & SEO Specialist' },
   shelby: { name: 'Shelby', emoji: '💼', subtitle: 'Business Strategist' },
@@ -160,8 +160,8 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-mc-accent-green rounded-full border-2 border-mc-bg-secondary" />
             </div>
             <div>
-              <h2 className="font-semibold text-base">Chat with ${targetAgent.name}</h2>
-              <p className="text-xs text-mc-text-secondary">${targetAgent.subtitle}</p>
+              <h2 className="font-semibold text-base">Chat with {targetAgent.name}</h2>
+              <p className="text-xs text-mc-text-secondary">{targetAgent.subtitle}</p>
             </div>
           </div>
         </div>
@@ -172,9 +172,9 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center py-20">
                 <span className="text-6xl mb-4">💬</span>
-                <h3 className="text-base font-semibold mb-2">Start a conversation with ${targetAgent.name}</h3>
+                <h3 className="text-base font-semibold mb-2">Start a conversation with {targetAgent.name}</h3>
                 <p className="text-mc-text-secondary text-xs max-w-md">
-                  ${targetAgent.name} is ready. Ask for updates, coordination, or direct help from this agent.
+                  {targetAgent.name} is ready. Ask for updates, coordination, or direct help from this agent.
                 </p>
               </div>
             )}
@@ -222,7 +222,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
                 <div className="bg-mc-bg-secondary border border-mc-border rounded-xl rounded-bl-sm px-5 py-3">
                   <div className="flex items-center gap-2 text-mc-text-secondary">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-xs">${targetAgent.name} is typing...</span>
+                    <span className="text-xs">{targetAgent.name} is typing...</span>
                   </div>
                 </div>
               </div>
@@ -284,13 +284,13 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-mc-accent rounded-full shadow-lg hover:bg-mc-accent/90 transition-all hover:scale-105 flex items-center justify-center group"
-        title="Chat with ${targetAgent.name}"
+        title="Chat with {targetAgent.name}"
       >
         <MessageSquare className="w-6 h-6 text-mc-bg" />
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-mc-accent-green rounded-full border-2 border-mc-bg animate-pulse" />
         {/* Tooltip */}
         <span className="absolute right-full mr-3 px-3 py-1.5 bg-mc-bg-secondary text-mc-text text-xs rounded-lg border border-mc-border opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-          Chat with ${targetAgent.name} 💬
+          Chat with {targetAgent.name} 💬
         </span>
       </button>
     );
@@ -416,7 +416,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             <div className="bg-mc-bg-tertiary rounded-xl rounded-bl-sm px-4 py-3">
               <div className="flex items-center gap-2 text-mc-text-secondary">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-xs">${targetAgent.name} is typing...</span>
+                <span className="text-xs">{targetAgent.name} is typing...</span>
               </div>
             </div>
           </div>
