@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { existsSync, readFileSync } from 'fs';
 import { queryAll, queryOne, run } from '@/lib/db';
 import { readAllAgentFiles } from '@/lib/workspace';
 import { listSessions } from '@/lib/openclaw/gateway-http';
@@ -43,6 +44,47 @@ async function getActiveAgentIds(): Promise<Set<string>> {
   }
 }
 
+const OPENCLAW_JSON = '/Users/nithis4th/.openclaw/openclaw.json';
+
+function normalizeModelName(model: string): string {
+  const trimmed = String(model || '').trim();
+  if (!trimmed) return '';
+  const parts = trimmed.split('/').filter(Boolean);
+  return parts[parts.length - 1] || trimmed;
+}
+
+function getPrimaryModelByAgentId(): Map<string, string> {
+  try {
+    if (!existsSync(OPENCLAW_JSON)) return new Map();
+
+    const raw = readFileSync(OPENCLAW_JSON, 'utf-8');
+    const config = JSON.parse(raw) as {
+      agents?: { list?: Array<{ id?: string; model?: string | { primary?: string } }> };
+    };
+
+    const modelMap = new Map<string, string>();
+    for (const agent of config.agents?.list || []) {
+      const id = String(agent.id || '').toLowerCase();
+      if (!id) continue;
+
+      const model =
+        typeof agent.model === 'string'
+          ? agent.model
+          : typeof agent.model === 'object' && agent.model?.primary
+            ? agent.model.primary
+            : '';
+
+      const normalized = normalizeModelName(model);
+      if (normalized) modelMap.set(id, normalized);
+    }
+
+    return modelMap;
+  } catch (error) {
+    console.error('Failed to parse openclaw.json for primary models:', error);
+    return new Map();
+  }
+}
+
 // GET /api/agents - List all agents
 export async function GET(request: NextRequest) {
   try {
@@ -61,6 +103,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch live Gateway sessions to determine real agent status
     const activeAgentIds = await getActiveAgentIds();
+    const primaryModelByAgentId = getPrimaryModelByAgentId();
 
     // Overlay workspace files + enrich status from live sessions
     for (const agent of agents) {
@@ -73,6 +116,13 @@ export async function GET(request: NextRequest) {
 
       // Derive live status from Gateway sessions
       const agentKey = (agent.gateway_agent_id || '').toLowerCase();
+
+      // Force Team tab model to OpenClaw primary model (not fallback/session model)
+      const primaryModel = primaryModelByAgentId.get(agentKey);
+      if (primaryModel) {
+        agent.model = primaryModel;
+      }
+
       if (agentKey && activeAgentIds.has(agentKey)) {
         agent.status = 'working' as AgentStatus;
       } else {

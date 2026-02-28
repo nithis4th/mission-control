@@ -301,7 +301,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
 
   // Full chat panel
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[420px] h-[600px] bg-mc-bg-secondary border border-mc-border rounded-xl shadow-2xl flex flex-col overflow-hidden animate-slide-in">
+    <div className="fixed bottom-6 right-6 z-50 w-[420px] h-[450px] bg-mc-bg-secondary border border-mc-border rounded-xl shadow-2xl flex flex-col overflow-hidden animate-slide-in">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-mc-border bg-mc-bg-tertiary/50">
         <div className="flex items-center gap-3">
