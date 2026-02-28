@@ -188,6 +188,76 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
   );
 }
 
+
+
+function AgentTimeline({ agentName, sessions, onClose }: { agentName: string; sessions: DocSession[]; onClose: () => void }) {
+  const [rows, setRows] = useState<Array<{ role: string; text: string; timestamp?: string | number; sessionKey: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const run = async () => {
+      setLoading(true);
+      try {
+        const all: Array<{ role: string; text: string; timestamp?: string | number; sessionKey: string }> = [];
+        const unique = Array.from(new Set(sessions.map((s) => s.key))).slice(0, 12);
+        for (const key of unique) {
+          const id = encodeURIComponent(key);
+          const res = await fetch(`/api/openclaw/sessions/${id}/history`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const msgs = (data.history || data.messages || []) as Array<{ role: string; content: unknown; timestamp?: string | number }>;
+          for (const m of msgs) {
+            if (m.role === 'system') continue;
+            const t = extractTextContent(m.content);
+            if (!t) continue;
+            if (t.startsWith('System: [') && t.includes('Exec')) continue;
+            all.push({ role: m.role, text: t, timestamp: m.timestamp, sessionKey: key });
+          }
+        }
+        all.sort((a, b) => {
+          const ta = a.timestamp ? new Date(a.timestamp as string).getTime() : 0;
+          const tb = b.timestamp ? new Date(b.timestamp as string).getTime() : 0;
+          return ta - tb;
+        });
+        setRows(all);
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, [agentName, sessions]);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-mc-bg-secondary border border-mc-border rounded-2xl w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-mc-border flex-shrink-0">
+          <div>
+            <h2 className="text-sm font-bold text-mc-text">{agentName} Timeline</h2>
+            <p className="text-xs text-mc-text-secondary mt-0.5">รวมบทสนทนาทุก session ของ agent นี้</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-mc-bg-tertiary text-mc-text-secondary hover:text-mc-text transition-colors text-lg leading-none">×</button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {loading ? (
+            <div className="text-mc-text-secondary text-sm animate-pulse">Loading timeline...</div>
+          ) : rows.length === 0 ? (
+            <div className="text-mc-text-secondary text-sm">ไม่มีข้อความที่แสดงได้</div>
+          ) : (
+            rows.map((r, i) => (
+              <div key={i} className={`flex gap-2 ${r.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${r.role === 'user' ? 'bg-mc-accent/15 text-mc-text border border-mc-accent/20' : 'bg-mc-bg-tertiary text-mc-text border border-mc-border'}`}>
+                  {r.text}
+                  {r.timestamp && <div className="mt-1 text-[10px] opacity-60">{formatDateTime(typeof r.timestamp === 'string' ? r.timestamp : new Date(r.timestamp).toISOString())}</div>}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SessionRow({ session, onOpen }: { session: DocSession; onOpen: () => void }) {
   return (
     <div
@@ -221,6 +291,7 @@ export function DocTab() {
   const [search, setSearch]     = useState('');
   const [agentFilter, setAgentFilter] = useState('all');
   const [openSession, setOpenSession] = useState<string | null>(null);
+  const [openAgentTimeline, setOpenAgentTimeline] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const loadDocs = async () => {
@@ -329,9 +400,21 @@ export function DocTab() {
                 >
                   {name} · {rows.length}
                 </button>
+
               ))}
             </div>
           </div>
+
+          {agentFilter !== 'all' && (
+            <div className="mt-2">
+              <button
+                onClick={() => setOpenAgentTimeline(agentFilter)}
+                className="text-[11px] px-2 py-1 rounded border border-mc-accent/40 text-mc-accent hover:bg-mc-accent/10 transition-colors"
+              >
+                Open {agentFilter} Timeline
+              </button>
+            </div>
+          )}
 
           {/* Search */}
           <div className="relative">
@@ -405,6 +488,13 @@ export function DocTab() {
       {/* Session History Modal */}
       {openSession && (
         <SessionMessages sessionKey={openSession} onClose={() => setOpenSession(null)} />
+      )}
+      {openAgentTimeline && (
+        <AgentTimeline
+          agentName={openAgentTimeline}
+          sessions={sessions.filter((s) => (s.agentName || s.agentId) === openAgentTimeline)}
+          onClose={() => setOpenAgentTimeline(null)}
+        />
       )}
     </>
   );
