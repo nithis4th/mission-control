@@ -25,7 +25,7 @@ type FilterMode = 'all' | 'working' | 'standby';
 type SortMode = 'name' | 'status' | 'model';
 type RefreshIntervalMode = 'off' | '15s' | '30s';
 
-export function TeamTab() {
+export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -146,6 +146,16 @@ export function TeamTab() {
   }
 
   const syncedAgo = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated.getTime()) / 1000)) : null;
+
+  const openSoulForAgent = (agentId: string) => {
+    try {
+      localStorage.setItem('mc.soul.selectedAgent', agentId);
+    } catch {
+      // ignore localStorage errors
+    }
+    onOpenTab?.('soul');
+  };
+
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -272,6 +282,26 @@ export function TeamTab() {
                 </span>
               </div>
               <div className="text-xs text-mc-text-secondary truncate mt-0.5">Model: {agent.model}</div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => onOpenTab?.('chat')}
+                className="text-[10px] px-2 py-1 rounded border border-mc-border text-mc-text-secondary hover:text-mc-text hover:border-mc-accent/40 transition-colors"
+              >
+                Chat
+              </button>
+              <button
+                onClick={() => onOpenTab?.('docs')}
+                className="text-[10px] px-2 py-1 rounded border border-mc-border text-mc-text-secondary hover:text-mc-text hover:border-mc-accent/40 transition-colors"
+              >
+                History
+              </button>
+              <button
+                onClick={() => openSoulForAgent(agent.id)}
+                className="text-[10px] px-2 py-1 rounded border border-mc-accent/40 text-mc-accent hover:bg-mc-accent/10 transition-colors"
+              >
+                Soul
+              </button>
             </div>
           </div>
         ))}

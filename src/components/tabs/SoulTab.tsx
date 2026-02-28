@@ -39,6 +39,18 @@ export function SoulTab() {
   }, []);
 
   useEffect(() => {
+    try {
+      const preferred = localStorage.getItem('mc.soul.selectedAgent');
+      if (preferred && AGENTS.some((a) => a.id === preferred)) {
+        setSelectedAgent(preferred);
+      }
+      localStorage.removeItem('mc.soul.selectedAgent');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     loadSoul(selectedAgent);
   }, [selectedAgent, loadSoul]);
 

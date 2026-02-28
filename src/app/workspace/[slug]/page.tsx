@@ -260,7 +260,7 @@ export default function WorkspacePage() {
 
         {activeTab === 'team' && (
           <div className="flex-1 flex overflow-hidden">
-            <TeamTab />
+            <TeamTab onOpenTab={setActiveTab} />
           </div>
         )}
 
