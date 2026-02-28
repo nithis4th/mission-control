@@ -3,6 +3,7 @@ import { listSessions, type GatewaySession } from '@/lib/openclaw/gateway-http';
 import { queryOne } from '@/lib/db';
 import { execSync } from 'child_process';
 import { calcCost, getPricing } from '@/lib/cost/calculate';
+import { updateUsageLedger, getTodayAgentUsage } from '@/lib/agent-usage-ledger';
 import type { Agent } from '@/lib/types';
 
 interface RouteParams {
@@ -77,6 +78,24 @@ export async function GET(_request: Request, { params }: RouteParams) {
       if (key.includes(`agent:${agentName}`)) return true;
       return false;
     });
+
+    // Update stable usage ledger (delta-based) to reduce realtime counter drift.
+    await updateUsageLedger(
+      agentSessions.map((session: GatewaySession) => {
+        const key = session.key || '';
+        const inferredAgentId = String((session as any).agentId || gatewayAgentId || agentName || '').toLowerCase();
+        return {
+          key,
+          agentId: inferredAgentId,
+          model: String(session.model || ''),
+          inputTokens: Number(session.inputTokens || 0),
+          outputTokens: Number(session.outputTokens || 0),
+          totalTokens: Number(session.totalTokens || 0),
+          updatedAt: Number(session.updatedAt || 0),
+        };
+      })
+    );
+
 
     let totalTokensInput = 0;
     let totalTokensOutput = 0;
@@ -193,6 +212,8 @@ export async function GET(_request: Request, { params }: RouteParams) {
       }
     }
 
+    const ledgerUsage = await getTodayAgentUsage(String(gatewayAgentId || agentName || '').toLowerCase());
+
     return NextResponse.json({
       agentId: id,
       agentName: agent.name,
@@ -201,8 +222,8 @@ export async function GET(_request: Request, { params }: RouteParams) {
       totalTokensInput,
       totalTokensOutput,
       estimatedCost: Math.round(estimatedCost * 10000) / 10000,
-      todayTokens: todayTokensInput + todayTokensOutput,
-      todayCost: Math.round(todayCost * 10000) / 10000,
+      todayTokens: ledgerUsage.tokens || (todayTokensInput + todayTokensOutput),
+      todayCost: Math.round((ledgerUsage.cost || todayCost) * 10000) / 10000,
       lastActiveAt: lastActiveAtMs || null,
       models: Array.from(modelsUsed),
       sessions: agentSessions.map((s: GatewaySession) => ({
