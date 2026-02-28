@@ -301,7 +301,7 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
         {visibleAgents.map((agent) => (
           <div
             key={agent.id}
-            className="flex items-center gap-3 p-3 rounded-xl bg-mc-bg-secondary border border-mc-border hover:border-mc-accent/30 transition-colors"
+            className="flex items-center gap-3 p-4 min-h-[124px] rounded-xl bg-mc-bg-secondary border border-mc-border hover:border-mc-accent/30 transition-colors"
           >
             <div className="text-2xl">{agent.emoji}</div>
             <div className="flex-1 min-w-0">
@@ -322,8 +322,9 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
                   {agent.status === 'working' ? 'working' : 'standby'}
                 </span>
               </div>
-              <div className="text-xs text-mc-text-secondary truncate mt-0.5">Model: {agent.model} · Active: {formatAgo(agent.lastActiveAt)}</div>
-              <div className="flex items-center gap-3 text-[10px] text-mc-text-secondary mt-1">
+              <div className="text-xs text-mc-text-secondary truncate mt-0.5">Model: {agent.model}</div>
+              <div className="text-xs text-mc-text-secondary mt-1">Active: {formatAgo(agent.lastActiveAt)}</div>
+              <div className="flex items-center gap-3 text-[10px] text-mc-text-secondary mt-1.5">
                 <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border">Today: {agent.todayTokens?.toLocaleString() || 0} tok</span>
                 <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border text-mc-accent-green">Cost: ${(agent.todayCost || 0).toFixed(4)}</span>
               </div>
