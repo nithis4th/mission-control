@@ -291,7 +291,7 @@ export function CostTab() {
               <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent/20' : showRefreshDone ? 'bg-green-400/20' : 'bg-mc-text-secondary/15'}`}>
                 <span key={refreshingTick} className={`block w-1.5 h-1.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent animate-spin' : showRefreshDone ? 'bg-green-400' : 'bg-mc-text-secondary/60'}`} />
               </span>
-              {isRefreshing ? 'Refreshing...' : showRefreshDone ? 'Updated' : 'Refresh'}
+              {showRefreshDone ? 'Updated' : 'Refresh'}
             </span>
           </button>
         </div>
