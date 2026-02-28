@@ -148,8 +148,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
                 if (t.startsWith('System: [') && t.includes('Exec')) return false;
                 return true;
               })
-               .slice(-120)
-              .map((msg, i) => (
+                .map((msg, i) => (
               <div
                 key={i}
                 className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
