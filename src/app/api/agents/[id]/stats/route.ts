@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { listSessions, type GatewaySession } from '@/lib/openclaw/gateway-http';
 import { queryOne } from '@/lib/db';
+import { execSync } from 'child_process';
 import type { Agent } from '@/lib/types';
 
 interface RouteParams {
@@ -10,6 +11,44 @@ interface RouteParams {
 function toMs(ts?: number): number {
   if (!ts) return 0;
   return ts < 1e12 ? ts * 1000 : ts;
+}
+
+
+type CliSession = {
+  key?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  updatedAt?: number;
+};
+
+function readCliSessionsMap(): Map<string, CliSession> {
+  try {
+    const raw = execSync('openclaw sessions --all-agents --json 2>/dev/null', {
+      timeout: 8000,
+      encoding: 'utf-8',
+      env: {
+        ...process.env,
+        PATH: '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:' + (process.env.PATH || ''),
+        OPENCLAW_GATEWAY_TOKEN: process.env.OPENCLAW_GATEWAY_TOKEN || '',
+      },
+    });
+    const parsed = JSON.parse(raw) as { sessions?: CliSession[]; stores?: Array<{ sessions?: CliSession[] }> };
+    const out = new Map<string, CliSession>();
+    const all: CliSession[] = [];
+    if (Array.isArray(parsed.sessions)) all.push(...parsed.sessions);
+    if (Array.isArray(parsed.stores)) {
+      for (const st of parsed.stores) {
+        if (Array.isArray(st.sessions)) all.push(...st.sessions);
+      }
+    }
+    for (const s of all) {
+      if (s.key) out.set(s.key, s);
+    }
+    return out;
+  } catch {
+    return new Map();
+  }
 }
 
 /**
@@ -25,6 +64,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     const allSessions = await listSessions();
+    const cliSessionsByKey = readCliSessionsMap();
 
     // Filter sessions for this agent
     const agentName = agent.name.toLowerCase();
@@ -48,16 +88,38 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const now = Date.now();
 
     for (const session of agentSessions) {
-      const input = typeof session.inputTokens === 'number' ? session.inputTokens : 0;
-      const output = typeof session.outputTokens === 'number' ? session.outputTokens : 0;
-      totalTokensInput += input;
-      totalTokensOutput += output;
+      const cli = cliSessionsByKey.get(session.key);
+      const input =
+        typeof session.inputTokens === 'number'
+          ? session.inputTokens
+          : typeof cli?.inputTokens === 'number'
+            ? cli.inputTokens
+            : 0;
+      const output =
+        typeof session.outputTokens === 'number'
+          ? session.outputTokens
+          : typeof cli?.outputTokens === 'number'
+            ? cli.outputTokens
+            : 0;
+      const total =
+        typeof session.totalTokens === 'number'
+          ? session.totalTokens
+          : typeof cli?.totalTokens === 'number'
+            ? cli.totalTokens
+            : input + output;
 
-      const updatedAtMs = toMs(Number(session.updatedAt || 0));
+      // fallback when only totalTokens exists
+      const fixedInput = input === 0 && output === 0 && total > 0 ? total : input;
+      const fixedOutput = input === 0 && output === 0 && total > 0 ? 0 : output;
+
+      totalTokensInput += fixedInput;
+      totalTokensOutput += fixedOutput;
+
+      const updatedAtMs = toMs(Number(session.updatedAt || cli?.updatedAt || 0));
       if (updatedAtMs > lastActiveAtMs) lastActiveAtMs = updatedAtMs;
       if (updatedAtMs && now - updatedAtMs <= DAY_MS) {
-        todayTokensInput += input;
-        todayTokensOutput += output;
+        todayTokensInput += fixedInput;
+        todayTokensOutput += fixedOutput;
       }
 
       if (session.model && typeof session.model === 'string') {
