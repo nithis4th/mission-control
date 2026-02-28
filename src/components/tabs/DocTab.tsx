@@ -145,6 +145,11 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
                     }
                     return '[non-text content omitted]';
                   })()}
+                  {msg.timestamp && (
+                    <div className="mt-1 text-[10px] opacity-60">
+                      {formatDateTime(typeof msg.timestamp === 'string' ? msg.timestamp : new Date(msg.timestamp).toISOString())}
+                    </div>
+                  )}
                 </div>
                 {msg.role === 'user' && (
                   <div className="w-6 h-6 rounded-full bg-mc-accent-purple/20 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
@@ -265,6 +270,7 @@ export function DocTab() {
               <h2 className="text-lg font-bold text-mc-text">History</h2>
               <p className="text-xs text-mc-text-secondary mt-0.5">
                 {sessions.length} sessions
+                <span className="ml-2 opacity-70">· filter: {agentFilter === 'all' ? 'All' : agentFilter}</span>
                 {lastUpdated && (
                   <span className="ml-2 opacity-60">
                     · updated {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
