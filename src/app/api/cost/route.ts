@@ -43,12 +43,27 @@ function readGatewayUsageCost() {
     const today = getBangkokDate(new Date());
     const todayRow = (data.daily || []).find((d) => d.date === today);
 
+    const todayCost = Number(todayRow?.totalCost || 0);
+    const todayTokens = Number(todayRow?.totalTokens || 0);
+    const totalCost = Number(data.totals?.totalCost || 0);
+    const totalTokens = Number(data.totals?.totalTokens || 0);
+
+    // provider lag: sometimes today's cost is 0 while tokens already increased.
+    // temporary estimate from average historical cost/token so UI isn't misleadingly near-zero.
+    let todayCostFinal = todayCost;
+    let source = 'gateway-usage-cost';
+    if (todayCostFinal === 0 && todayTokens > 0 && totalTokens > 0 && totalCost > 0) {
+      const avgPerToken = totalCost / totalTokens;
+      todayCostFinal = todayTokens * avgPerToken;
+      source = 'gateway-usage-cost+estimated-today';
+    }
+
     return {
-      todayCost: Number(todayRow?.totalCost || 0),
-      todayTokens: Number(todayRow?.totalTokens || 0),
-      totalCost: Number(data.totals?.totalCost || 0),
-      totalTokens: Number(data.totals?.totalTokens || 0),
-      source: 'gateway-usage-cost',
+      todayCost: todayCostFinal,
+      todayTokens,
+      totalCost,
+      totalTokens,
+      source,
     };
   } catch {
     return null;
@@ -60,7 +75,6 @@ export async function GET() {
   try {
     // Prefer gateway's authoritative usage-cost when available
     const usage = readGatewayUsageCost();
-
     const data = await computeCostData();
 
     if (usage) {
