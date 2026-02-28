@@ -119,10 +119,6 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
       setLastUpdated(new Date());
       if (!manual) setRefreshCount((x) => x + 1);
 
-      if (manual) {
-        setShowRefreshDone(true);
-        setTimeout(() => setShowRefreshDone(false), 900);
-      }
     } catch (err) {
       setRefreshError(err instanceof Error ? err.message : 'refresh failed');
       setAgents(KNOWN_AGENTS.map((a) => ({ ...a, status: 'standby' as const })));
@@ -136,6 +132,8 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
           await new Promise((resolve) => setTimeout(resolve, waitMs));
         }
         setIsRefreshing(false);
+        setShowRefreshDone(true);
+        setTimeout(() => setShowRefreshDone(false), 1000);
       }
     }
   };
@@ -252,7 +250,7 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
                 }`}
               />
             </span>
-            {showRefreshDone ? 'Updated' : 'Refresh'}
+            {isRefreshing ? 'Refresh' : showRefreshDone ? 'Updated' : 'Refresh'}
           </span>
         </button>
       </div>
