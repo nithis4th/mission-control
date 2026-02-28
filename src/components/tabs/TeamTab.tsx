@@ -24,9 +24,12 @@ type AgentInfo = {
 export function TeamTab() {
   const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const loadAgents = async () => {
+  const loadAgents = async (manual = false) => {
+    if (manual) setIsRefreshing(true);
+
     try {
       const res = await fetch('/api/agents');
       const data: Agent[] = res.ok ? await res.json() : [];
@@ -55,6 +58,7 @@ export function TeamTab() {
       setAgents(KNOWN_AGENTS.map((a) => ({ ...a, status: 'standby' as const })));
     } finally {
       setLoading(false);
+      if (manual) setIsRefreshing(false);
     }
   };
 
@@ -86,16 +90,17 @@ export function TeamTab() {
             {workingCount} active · {agents.length - workingCount} standby
             {lastUpdated && (
               <span className="ml-2 opacity-60">
-                · updated {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                · updated {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             )}
           </p>
         </div>
         <button
-          onClick={loadAgents}
-          className="text-xs text-mc-text-secondary hover:text-mc-text px-2 py-1 rounded border border-mc-border hover:border-mc-accent/40 transition-colors"
+          onClick={() => loadAgents(true)}
+          disabled={isRefreshing}
+          className="text-xs text-mc-text-secondary hover:text-mc-text px-2 py-1 rounded border border-mc-border hover:border-mc-accent/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Refresh
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
 
