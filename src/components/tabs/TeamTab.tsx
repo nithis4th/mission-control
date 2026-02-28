@@ -13,6 +13,8 @@ const KNOWN_AGENTS = [
   { id: 'monalisa', emoji: '🎨', label: 'Monalisa', model: 'claude-sonnet-4-6' },
 ];
 
+const TEAM_UI_VERSION = 'v3764ea7';
+
 type AgentInfo = {
   id: string;
   emoji: string;
@@ -121,6 +123,7 @@ export function TeamTab() {
             )}
             <span className="ml-2 opacity-40">· refresh #{refreshCount}</span>
           </p>
+          <div className="text-[10px] text-mc-text-secondary/60 mt-1">UI build: {TEAM_UI_VERSION}</div>
         </div>
         <button
           onClick={() => loadAgents(true)}
@@ -133,7 +136,7 @@ export function TeamTab() {
             <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent/20' : showRefreshDone ? 'bg-green-400/20' : 'bg-mc-text-secondary/15'}`}>
               <span key={refreshingTick} className={`block w-1.5 h-1.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent animate-spin' : showRefreshDone ? 'bg-green-400' : 'bg-mc-text-secondary/60'}`} />
             </span>
-            {isRefreshing ? 'Refreshing...' : showRefreshDone ? 'Updated' : 'Refresh'}
+            {isRefreshing ? 'Refreshing...' : showRefreshDone ? 'Updated' : `Refresh ${TEAM_UI_VERSION}`}
           </span>
         </button>
       </div>
