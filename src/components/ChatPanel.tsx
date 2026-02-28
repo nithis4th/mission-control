@@ -15,6 +15,17 @@ interface ChatPanelProps {
   fullPage?: boolean;
 }
 
+
+const AGENT_META: Record<string, { name: string; emoji: string; subtitle: string }> = {
+  main: { name: 'Eve', emoji: '🦋', subtitle: '${targetAgent.subtitle}' },
+  dexter: { name: 'Dexter', emoji: '🤖', subtitle: 'CTO — Mission Dashboard & Systems' },
+  sherlock: { name: 'Sherlock', emoji: '🔍', subtitle: 'Research & SEO Specialist' },
+  shelby: { name: 'Shelby', emoji: '💼', subtitle: 'Business Strategist' },
+  bluma: { name: 'Bluma', emoji: '🛡️', subtitle: 'Security & Risk Review' },
+  goku: { name: 'Goku', emoji: '⚡', subtitle: 'Fitness & Coaching Agent' },
+  monalisa: { name: 'Monalisa', emoji: '🎨', subtitle: 'Creative & Design Agent' },
+};
+
 export function ChatPanel({ fullPage = false }: ChatPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -22,9 +33,12 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [targetAgentId, setTargetAgentId] = useState('main');
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const targetAgent = AGENT_META[targetAgentId] || AGENT_META.main;
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,6 +53,18 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
       inputRef.current?.focus();
     }
   }, [isOpen, isMinimized]);
+
+  useEffect(() => {
+    try {
+      const preferred = localStorage.getItem('mc.chat.targetAgent');
+      if (preferred && AGENT_META[preferred]) {
+        setTargetAgentId(preferred);
+      }
+      localStorage.removeItem('mc.chat.targetAgent');
+    } catch {
+      // ignore localStorage errors
+    }
+  }, [fullPage]);
 
   const sendMessage = async () => {
     const trimmed = input.trim();
@@ -64,6 +90,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
         body: JSON.stringify({
           message: trimmed,
           sessionId,
+          agentId: targetAgentId,
         }),
       });
 
@@ -133,8 +160,8 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-mc-accent-green rounded-full border-2 border-mc-bg-secondary" />
             </div>
             <div>
-              <h2 className="font-semibold text-base">Chat with Eve</h2>
-              <p className="text-xs text-mc-text-secondary">AI Orchestrator — Direct Message</p>
+              <h2 className="font-semibold text-base">Chat with ${targetAgent.name}</h2>
+              <p className="text-xs text-mc-text-secondary">${targetAgent.subtitle}</p>
             </div>
           </div>
         </div>
@@ -145,9 +172,9 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center py-20">
                 <span className="text-6xl mb-4">💬</span>
-                <h3 className="text-base font-semibold mb-2">Start a conversation with Eve</h3>
+                <h3 className="text-base font-semibold mb-2">Start a conversation with ${targetAgent.name}</h3>
                 <p className="text-mc-text-secondary text-xs max-w-md">
-                  Eve is your AI orchestrator. Ask her to manage tasks, coordinate agents, or get status updates on your projects.
+                  ${targetAgent.name} is ready. Ask for updates, coordination, or direct help from this agent.
                 </p>
               </div>
             )}
@@ -195,7 +222,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
                 <div className="bg-mc-bg-secondary border border-mc-border rounded-xl rounded-bl-sm px-5 py-3">
                   <div className="flex items-center gap-2 text-mc-text-secondary">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-xs">Eve is typing...</span>
+                    <span className="text-xs">${targetAgent.name} is typing...</span>
                   </div>
                 </div>
               </div>
@@ -220,7 +247,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Message Eve..."
+              placeholder={`Message ${targetAgent.name}...`}
               rows={1}
               className="flex-1 bg-mc-bg border border-mc-border rounded-xl px-4 py-3 text-xs resize-none focus:outline-none focus:border-mc-accent max-h-32"
               style={{
@@ -257,13 +284,13 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-mc-accent rounded-full shadow-lg hover:bg-mc-accent/90 transition-all hover:scale-105 flex items-center justify-center group"
-        title="Chat with Eve"
+        title="Chat with ${targetAgent.name}"
       >
         <MessageSquare className="w-6 h-6 text-mc-bg" />
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-mc-accent-green rounded-full border-2 border-mc-bg animate-pulse" />
         {/* Tooltip */}
         <span className="absolute right-full mr-3 px-3 py-1.5 bg-mc-bg-secondary text-mc-text text-xs rounded-lg border border-mc-border opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-          Chat with Eve 💬
+          Chat with ${targetAgent.name} 💬
         </span>
       </button>
     );
@@ -274,7 +301,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
     return (
       <div className="fixed bottom-6 right-6 z-50 bg-mc-bg-secondary border border-mc-border rounded-lg shadow-xl flex items-center gap-3 px-4 py-2">
         <span className="text-base">🤖</span>
-        <span className="text-xs font-medium">Eve Chat</span>
+        <span className="text-xs font-medium">{targetAgent.name} Chat</span>
         {messages.length > 0 && (
           <span className="bg-mc-accent text-mc-bg text-xs px-2 py-0.5 rounded-full">
             {messages.length}
@@ -310,7 +337,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-mc-accent-green rounded-full border-2 border-mc-bg-secondary" />
           </div>
           <div>
-            <h3 className="font-semibold text-xs">Eve</h3>
+            <h3 className="font-semibold text-xs">{targetAgent.name}</h3>
             <p className="text-xs text-mc-text-secondary">AI Orchestrator</p>
           </div>
         </div>
@@ -338,8 +365,8 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
           <div className="flex flex-col items-center justify-center h-full text-center">
             <span className="text-4xl mb-3">💬</span>
             <p className="text-mc-text-secondary text-xs">
-              Start chatting with Eve.<br />
-              She&apos;s your AI orchestrator.
+              Start chatting with {targetAgent.name}.<br />
+              {targetAgent.name} is your selected agent.
             </p>
           </div>
         )}
@@ -389,7 +416,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             <div className="bg-mc-bg-tertiary rounded-xl rounded-bl-sm px-4 py-3">
               <div className="flex items-center gap-2 text-mc-text-secondary">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-xs">Eve is typing...</span>
+                <span className="text-xs">${targetAgent.name} is typing...</span>
               </div>
             </div>
           </div>
@@ -413,7 +440,7 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message Eve..."
+            placeholder={`Message ${targetAgent.name}...`}
             rows={1}
             className="flex-1 bg-mc-bg border border-mc-border rounded-lg px-3 py-2 text-xs resize-none focus:outline-none focus:border-mc-accent max-h-24"
             style={{

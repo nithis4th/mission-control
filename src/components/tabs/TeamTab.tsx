@@ -285,13 +285,13 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
-                onClick={() => onOpenTab?.('chat')}
+                onClick={() => { try { localStorage.setItem('mc.chat.targetAgent', agent.id); } catch {} onOpenTab?.('chat'); }}
                 className="text-[10px] px-2 py-1 rounded border border-mc-border text-mc-text-secondary hover:text-mc-text hover:border-mc-accent/40 transition-colors"
               >
                 Chat
               </button>
               <button
-                onClick={() => onOpenTab?.('docs')}
+                onClick={() => { try { localStorage.setItem('mc.docs.targetAgent', agent.id); } catch {} onOpenTab?.('docs'); }}
                 className="text-[10px] px-2 py-1 rounded border border-mc-border text-mc-text-secondary hover:text-mc-text hover:border-mc-accent/40 transition-colors"
               >
                 History
