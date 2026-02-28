@@ -86,7 +86,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
         <div className="flex items-center justify-between p-5 border-b border-mc-border flex-shrink-0">
           <div className="flex-1 min-w-0 pr-4">
             <h2 className="text-sm font-bold text-mc-text font-mono truncate">{sessionKey}</h2>
-            <p className="text-xs text-mc-text-secondary mt-0.5">Session History</p>
+            <p className="text-xs text-mc-text-secondary mt-0.5">Session History · Agent chat only</p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-mc-bg-tertiary text-mc-text-secondary hover:text-mc-text transition-colors text-lg leading-none">
             ×
@@ -97,7 +97,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
             <div className="flex items-center justify-center py-12">
               <div className="text-mc-text-secondary text-sm animate-pulse">Loading history...</div>
             </div>
-          ) : messages.length === 0 ? (
+          ) : messages.filter((m) => m.role !== 'system').length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="text-3xl mb-2">💬</div>
@@ -105,7 +105,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
               </div>
             </div>
           ) : (
-            messages.slice(-20).map((msg, i) => (
+            messages.filter((m) => m.role !== 'system').slice(-20).map((msg, i) => (
               <div
                 key={i}
                 className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -150,7 +150,7 @@ function SessionRow({ session, onOpen }: { session: DocSession; onOpen: () => vo
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-xs text-mc-text font-medium truncate">{shortKey(session.key)}</span>
+          <span className="text-xs text-mc-text font-medium truncate">{session.agentName} · {shortKey(session.key)}</span>
           <span className="text-[10px] text-mc-text-secondary/50 font-mono flex-shrink-0">
             {session.messageCount}msg
           </span>
@@ -244,7 +244,7 @@ export function DocTab() {
         <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-mc-border">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-bold text-mc-text">Doc</h2>
+              <h2 className="text-lg font-bold text-mc-text">History</h2>
               <p className="text-xs text-mc-text-secondary mt-0.5">
                 {sessions.length} sessions
                 {lastUpdated && (
