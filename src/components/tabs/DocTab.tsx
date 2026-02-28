@@ -85,7 +85,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
       >
         <div className="flex items-center justify-between p-5 border-b border-mc-border flex-shrink-0">
           <div className="flex-1 min-w-0 pr-4">
-            <h2 className="text-sm font-bold text-mc-text font-mono truncate">{sessionKey}</h2>
+            <h2 className="text-sm font-bold text-mc-text font-mono truncate">{shortKey(sessionKey)}</h2>
             <p className="text-xs text-mc-text-secondary mt-0.5">Session History · Agent chat only</p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-mc-bg-tertiary text-mc-text-secondary hover:text-mc-text transition-colors text-lg leading-none">
@@ -124,9 +124,27 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
                       : 'bg-mc-bg-tertiary text-mc-text border border-mc-border'
                   }`}
                 >
-                  {typeof msg.content === 'string'
-                    ? msg.content.slice(0, 500) + (msg.content.length > 500 ? '...' : '')
-                    : '[non-text content omitted]'}
+                  {(() => {
+                    const c = msg.content as unknown;
+                    if (typeof c === 'string') {
+                      return c.slice(0, 500) + (c.length > 500 ? '...' : '');
+                    }
+                    if (Array.isArray(c)) {
+                      const texts = c
+                        .map((x) => {
+                          if (typeof x === 'string') return x;
+                          if (x && typeof x === 'object' && 'text' in (x as Record<string, unknown>)) {
+                            return String((x as Record<string, unknown>).text || '');
+                          }
+                          return '';
+                        })
+                        .filter(Boolean)
+                        .join(' ')
+                        .trim();
+                      if (texts) return texts.slice(0, 500) + (texts.length > 500 ? '...' : '');
+                    }
+                    return '[non-text content omitted]';
+                  })()}
                 </div>
                 {msg.role === 'user' && (
                   <div className="w-6 h-6 rounded-full bg-mc-accent-purple/20 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
