@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2 } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2, ArrowLeft } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -13,6 +13,7 @@ interface ChatMessage {
 
 interface ChatPanelProps {
   fullPage?: boolean;
+  onBack?: () => void;
 }
 
 
@@ -26,7 +27,7 @@ const AGENT_META: Record<string, { name: string; emoji: string; subtitle: string
   monalisa: { name: 'Monalisa', emoji: '🎨', subtitle: 'Creative & Design Agent' },
 };
 
-export function ChatPanel({ fullPage = false }: ChatPanelProps) {
+export function ChatPanel({ fullPage = false, onBack }: ChatPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -155,6 +156,15 @@ export function ChatPanel({ fullPage = false }: ChatPanelProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-mc-border bg-mc-bg-secondary">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded border border-mc-border text-mc-text-secondary hover:text-mc-text hover:border-mc-accent/40 transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back
+              </button>
+            )}
             <div className="relative">
               <span className="text-3xl">🤖</span>
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-mc-accent-green rounded-full border-2 border-mc-bg-secondary" />
