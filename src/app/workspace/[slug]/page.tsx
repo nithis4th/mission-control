@@ -231,7 +231,7 @@ export default function WorkspacePage() {
 
         {activeTab === 'chat' && (
           <div className="flex-1 overflow-hidden">
-            <ChatPanel fullPage />
+            <ChatPanel fullPage onBack={() => setActiveTab('team')} />
           </div>
         )}
 

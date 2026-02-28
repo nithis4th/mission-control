@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { listSessions, type GatewaySession } from '@/lib/openclaw/gateway-http';
 import { queryOne } from '@/lib/db';
 import { execSync } from 'child_process';
-import { calcCost } from '@/lib/cost/calculate';
+import { calcCost, getPricing } from '@/lib/cost/calculate';
 import type { Agent } from '@/lib/types';
 
 interface RouteParams {
@@ -164,7 +164,27 @@ export async function GET(_request: Request, { params }: RouteParams) {
       const estimatedOutput = hasOnlyTotal ? Math.round(total * 0.15) : output;
       const estimatedInput = hasOnlyTotal ? Math.max(0, total - estimatedOutput) : input;
 
-      const sessionCost = calcCost(model, estimatedInput, estimatedOutput);
+      let sessionCost = calcCost(model, estimatedInput, estimatedOutput);
+
+      // Include estimated cache-read cost when totalTokens > totalTokensFresh.
+      // OpenClaw CLI does not expose per-session cacheRead directly, so estimate from the gap.
+      const totalTokens =
+        typeof session.totalTokens === 'number'
+          ? session.totalTokens
+          : typeof cli?.totalTokens === 'number'
+            ? cli.totalTokens
+            : estimatedInput + estimatedOutput;
+      const totalFresh =
+        typeof (session as any).totalTokensFresh === 'number'
+          ? Number((session as any).totalTokensFresh)
+          : totalTokens;
+      const cacheReadTokens = Math.max(0, totalTokens - totalFresh);
+      if (cacheReadTokens > 0) {
+        const pricing = getPricing(String(model));
+        // Heuristic: cache-read priced at ~10% of input token rate.
+        sessionCost += (cacheReadTokens / 1_000_000) * (pricing.input * 0.10);
+      }
+
       estimatedCost += sessionCost;
 
       const updatedAtMs = toMs(Number(session.updatedAt || cli?.updatedAt || 0));
