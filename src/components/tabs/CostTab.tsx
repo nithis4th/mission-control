@@ -95,6 +95,9 @@ export function CostTab() {
   const [history, setHistory] = useState<HistoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showRefreshDone, setShowRefreshDone] = useState(false);
+  const [refreshingTick, setRefreshingTick] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(toBangkokDateInput(new Date()));
   const [rangeMode, setRangeMode] = useState<'date' | 'last7'>('date');
@@ -131,14 +134,32 @@ export function CostTab() {
     }
   };
 
-  const refreshAll = async () => {
+  const refreshAll = async (manual = false) => {
+    const startedAt = Date.now();
+    if (manual) {
+      setIsRefreshing(true);
+      setRefreshingTick((x) => x + 1);
+      setShowRefreshDone(false);
+    }
+
     setLoading(true);
     await Promise.all([loadCost(), loadHistory(selectedDate)]);
     setLoading(false);
+
+    if (manual) {
+      const elapsed = Date.now() - startedAt;
+      const minVisibleMs = 450;
+      const waitMs = Math.max(0, minVisibleMs - elapsed);
+      if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+      setIsRefreshing(false);
+      setShowRefreshDone(true);
+      setTimeout(() => setShowRefreshDone(false), 900);
+    }
   };
 
   useEffect(() => {
-    refreshAll();
+    refreshAll(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -215,7 +236,7 @@ export function CostTab() {
             Token usage and estimated cost across all agents
             {lastUpdated && (
               <span className="ml-2 opacity-60">
-                · {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                · {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             )}
           </p>
@@ -260,10 +281,18 @@ export function CostTab() {
             Last 7 days
           </button>
           <button
-            onClick={refreshAll}
-            className="text-xs text-mc-text-secondary hover:text-mc-text px-2 py-1 rounded border border-mc-border hover:border-mc-accent/40 transition-colors"
+            onClick={() => refreshAll(true)}
+            disabled={isRefreshing}
+            className="text-xs px-2.5 py-1 rounded border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60 border-mc-border hover:border-mc-accent/40 text-mc-text-secondary hover:text-mc-text"
           >
-            Refresh
+            <span
+              className={`inline-flex items-center gap-1.5 transition-all duration-300 ${isRefreshing ? 'text-mc-accent' : showRefreshDone ? 'text-green-400' : ''}`}
+            >
+              <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent/20' : showRefreshDone ? 'bg-green-400/20' : 'bg-mc-text-secondary/15'}`}>
+                <span key={refreshingTick} className={`block w-1.5 h-1.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent animate-spin' : showRefreshDone ? 'bg-green-400' : 'bg-mc-text-secondary/60'}`} />
+              </span>
+              {isRefreshing ? 'Refreshing...' : showRefreshDone ? 'Updated' : 'Refresh'}
+            </span>
           </button>
         </div>
       </div>
