@@ -28,8 +28,10 @@ export function TeamTab() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [showRefreshDone, setShowRefreshDone] = useState(false);
 
   const loadAgents = async (manual = false) => {
+    const startedAt = Date.now();
     if (manual) setIsRefreshing(true);
 
     try {
@@ -59,12 +61,25 @@ export function TeamTab() {
       setAgents(enriched);
       setLastUpdated(new Date());
       setRefreshCount((x) => x + 1);
+
+      if (manual) {
+        setShowRefreshDone(true);
+        setTimeout(() => setShowRefreshDone(false), 900);
+      }
     } catch (err) {
       setRefreshError(err instanceof Error ? err.message : 'refresh failed');
       setAgents(KNOWN_AGENTS.map((a) => ({ ...a, status: 'standby' as const })));
     } finally {
       setLoading(false);
-      if (manual) setIsRefreshing(false);
+      if (manual) {
+        const elapsed = Date.now() - startedAt;
+        const minVisibleMs = 450;
+        const waitMs = Math.max(0, minVisibleMs - elapsed);
+        if (waitMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
+        }
+        setIsRefreshing(false);
+      }
     }
   };
 
@@ -105,9 +120,14 @@ export function TeamTab() {
         <button
           onClick={() => loadAgents(true)}
           disabled={isRefreshing}
-          className="text-xs text-mc-text-secondary hover:text-mc-text px-2 py-1 rounded border border-mc-border hover:border-mc-accent/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-xs px-2.5 py-1 rounded border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60 border-mc-border hover:border-mc-accent/40 text-mc-text-secondary hover:text-mc-text"
         >
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <span
+            className={`inline-flex items-center gap-1.5 transition-all duration-300 ${isRefreshing ? 'text-mc-accent' : showRefreshDone ? 'text-green-400' : ''}`}
+          >
+            <span className={`inline-block w-1.5 h-1.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent animate-pulse' : showRefreshDone ? 'bg-green-400' : 'bg-mc-text-secondary/50'}`} />
+            {isRefreshing ? 'Refreshing...' : showRefreshDone ? 'Updated' : 'Refresh'}
+          </span>
         </button>
       </div>
 
