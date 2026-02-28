@@ -301,9 +301,9 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
         {visibleAgents.map((agent) => (
           <div
             key={agent.id}
-            className="flex items-center gap-3 p-4 min-h-[124px] rounded-xl bg-mc-bg-secondary border border-mc-border hover:border-mc-accent/30 transition-colors"
+            className="flex items-start gap-3 p-4 min-h-[124px] rounded-xl bg-mc-bg-secondary border border-mc-border hover:border-mc-accent/30 transition-colors"
           >
-            <div className="text-2xl">{agent.emoji}</div>
+            <div className="text-2xl mt-0.5 leading-none">{agent.emoji}</div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-mc-text truncate">{agent.label}</span>
