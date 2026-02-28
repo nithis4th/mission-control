@@ -29,10 +29,15 @@ export function TeamTab() {
   const [refreshCount, setRefreshCount] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [showRefreshDone, setShowRefreshDone] = useState(false);
+  const [refreshingTick, setRefreshingTick] = useState(0);
 
   const loadAgents = async (manual = false) => {
     const startedAt = Date.now();
-    if (manual) setIsRefreshing(true);
+    if (manual) {
+      setIsRefreshing(true);
+      setRefreshingTick((x) => x + 1);
+      setRefreshCount((x) => x + 1); // immediate visual feedback
+    }
 
     try {
       setRefreshError(null);
@@ -60,7 +65,7 @@ export function TeamTab() {
 
       setAgents(enriched);
       setLastUpdated(new Date());
-      setRefreshCount((x) => x + 1);
+      if (!manual) setRefreshCount((x) => x + 1);
 
       if (manual) {
         setShowRefreshDone(true);
@@ -125,7 +130,9 @@ export function TeamTab() {
           <span
             className={`inline-flex items-center gap-1.5 transition-all duration-300 ${isRefreshing ? 'text-mc-accent' : showRefreshDone ? 'text-green-400' : ''}`}
           >
-            <span className={`inline-block w-1.5 h-1.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent animate-pulse' : showRefreshDone ? 'bg-green-400' : 'bg-mc-text-secondary/50'}`} />
+            <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent/20' : showRefreshDone ? 'bg-green-400/20' : 'bg-mc-text-secondary/15'}`}>
+              <span key={refreshingTick} className={`block w-1.5 h-1.5 rounded-full transition-all duration-300 ${isRefreshing ? 'bg-mc-accent animate-spin' : showRefreshDone ? 'bg-green-400' : 'bg-mc-text-secondary/60'}`} />
+            </span>
             {isRefreshing ? 'Refreshing...' : showRefreshDone ? 'Updated' : 'Refresh'}
           </span>
         </button>
