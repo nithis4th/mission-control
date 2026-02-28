@@ -71,21 +71,24 @@ function isHumanChatSession(s: RawSession): boolean {
   const key = s.key || '';
   if (!key) return false;
 
-  // keep human-like conversations; drop cron/system/group noise
+  // always drop cron/system-generated sessions
   if (key.includes(':cron:')) return false;
-  if (key.includes(':group:')) return false;
-  if (s.kind === 'group') return false;
 
-  // direct channels and web/openai user chats
+  // include topic/group chats with agents (Dexter topic etc.)
+  if (key.includes(':topic:')) return true;
+
+  // include direct channels and web/openai user chats
   if (key.includes(':direct:')) return true;
   if (key.includes(':openai-user:')) return true;
   if (key.includes(':openai:')) return true;
-  if (s.kind === 'direct') return true;
+  if (s.kind === 'direct' || s.kind === 'group') return true;
 
   return false;
 }
 
 function getExcerpt(key: string, agentName: string): string {
+  if (key.includes(':topic:')) return `คุยใน Group Topic กับ ${agentName}`;
+  if (key.includes(':group:')) return `คุยใน Group กับ ${agentName}`;
   if (key.includes(':direct:')) return `แชทตรงกับ ${agentName}`;
   if (key.includes(':openai-user:')) return `แชทผ่าน Mission Dashboard กับ ${agentName}`;
   if (key.includes(':openai:')) return `แชท API กับ ${agentName}`;
