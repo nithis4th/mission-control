@@ -7,6 +7,11 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+function toMs(ts?: number): number {
+  if (!ts) return 0;
+  return ts < 1e12 ? ts * 1000 : ts;
+}
+
 /**
  * GET /api/agents/[id]/stats — Token usage & cost stats for an agent
  */
@@ -34,12 +39,27 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     let totalTokensInput = 0;
     let totalTokensOutput = 0;
+    let todayTokensInput = 0;
+    let todayTokensOutput = 0;
+    let lastActiveAtMs = 0;
     const modelsUsed = new Set<string>();
     const sessionCount = agentSessions.length;
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
 
     for (const session of agentSessions) {
-      if (typeof session.inputTokens === 'number') totalTokensInput += session.inputTokens;
-      if (typeof session.outputTokens === 'number') totalTokensOutput += session.outputTokens;
+      const input = typeof session.inputTokens === 'number' ? session.inputTokens : 0;
+      const output = typeof session.outputTokens === 'number' ? session.outputTokens : 0;
+      totalTokensInput += input;
+      totalTokensOutput += output;
+
+      const updatedAtMs = toMs(Number(session.updatedAt || 0));
+      if (updatedAtMs > lastActiveAtMs) lastActiveAtMs = updatedAtMs;
+      if (updatedAtMs && now - updatedAtMs <= DAY_MS) {
+        todayTokensInput += input;
+        todayTokensOutput += output;
+      }
+
       if (session.model && typeof session.model === 'string') {
         modelsUsed.add(session.model);
       }
@@ -55,6 +75,12 @@ export async function GET(_request: Request, { params }: RouteParams) {
       Array.from(modelsUsed)[0],
     );
 
+    const todayCost = estimateTokenCost(
+      todayTokensInput,
+      todayTokensOutput,
+      Array.from(modelsUsed)[0],
+    );
+
     return NextResponse.json({
       agentId: id,
       agentName: agent.name,
@@ -63,6 +89,9 @@ export async function GET(_request: Request, { params }: RouteParams) {
       totalTokensInput,
       totalTokensOutput,
       estimatedCost: Math.round(estimatedCost * 10000) / 10000,
+      todayTokens: todayTokensInput + todayTokensOutput,
+      todayCost: Math.round(todayCost * 10000) / 10000,
+      lastActiveAt: lastActiveAtMs || null,
       models: Array.from(modelsUsed),
       sessions: agentSessions.map((s: GatewaySession) => ({
         id: s.key,

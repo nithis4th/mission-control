@@ -19,11 +19,27 @@ type AgentInfo = {
   label: string;
   model: string;
   status: 'working' | 'standby';
+  lastActiveAt?: number | null;
+  todayTokens?: number;
+  todayCost?: number;
 };
 
 type FilterMode = 'all' | 'working' | 'standby';
 type SortMode = 'name' | 'status' | 'model';
 type RefreshIntervalMode = 'off' | '15s' | '30s';
+
+function formatAgo(ts?: number | null): string {
+  if (!ts) return 'no activity';
+  const diff = Math.max(0, Date.now() - ts);
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  return `${day}d ago`;
+}
 
 export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
   const [agents, setAgents] = useState<AgentInfo[]>([]);
@@ -72,7 +88,33 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
         };
       });
 
-      setAgents(enriched);
+      // Phase C: load per-agent health metrics (last active, today tokens, today cost)
+      const statsResults = await Promise.all(
+        enriched.map(async (agent) => {
+          const dbAgent = data.find(
+            (a) =>
+              (a.gateway_agent_id || '').toLowerCase() === agent.id ||
+              a.name.toLowerCase() === agent.label.toLowerCase()
+          );
+          if (!dbAgent?.id) return { ...agent, lastActiveAt: null, todayTokens: 0, todayCost: 0 };
+
+          try {
+            const res = await fetch(`/api/agents/${dbAgent.id}/stats?t=${Date.now()}`, { cache: 'no-store' });
+            if (!res.ok) return { ...agent, lastActiveAt: null, todayTokens: 0, todayCost: 0 };
+            const stat = await res.json();
+            return {
+              ...agent,
+              lastActiveAt: typeof stat.lastActiveAt === 'number' ? stat.lastActiveAt : null,
+              todayTokens: typeof stat.todayTokens === 'number' ? stat.todayTokens : 0,
+              todayCost: typeof stat.todayCost === 'number' ? stat.todayCost : 0,
+            };
+          } catch {
+            return { ...agent, lastActiveAt: null, todayTokens: 0, todayCost: 0 };
+          }
+        })
+      );
+
+      setAgents(statsResults);
       setLastUpdated(new Date());
       if (!manual) setRefreshCount((x) => x + 1);
 
@@ -281,7 +323,11 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
                   {agent.status === 'working' ? 'working' : 'standby'}
                 </span>
               </div>
-              <div className="text-xs text-mc-text-secondary truncate mt-0.5">Model: {agent.model}</div>
+              <div className="text-xs text-mc-text-secondary truncate mt-0.5">Model: {agent.model} · Active: {formatAgo(agent.lastActiveAt)}</div>
+              <div className="flex items-center gap-3 text-[10px] text-mc-text-secondary mt-1">
+                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border">Today: {agent.todayTokens?.toLocaleString() || 0} tok</span>
+                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border text-mc-accent-green">${(agent.todayCost || 0).toFixed(4)}</span>
+              </div>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
