@@ -121,3 +121,18 @@ pgrep -af "next-server|next start -p 4000|npm start" || true
   ```bash
   cd ~/mission-control && git fetch --tags && git checkout kg-2026-02-28-mission-dashboard
   ```
+
+
+### kg-2026-02-28-team-ui-stable
+- commit: `a99d8de`
+- date: 2026-02-28
+- user-approved UI scope:
+  - Team cards taller and easier to read
+  - Active moved to separate line
+  - Today Token + Cost in single bottom row (left/right)
+  - Today Token field widened to reduce wrapping
+  - Refresh UX keeps Updated pulse after manual click
+- restore command:
+  ```bash
+  cd ~/mission-control && git fetch --tags && git checkout kg-2026-02-28-team-ui-stable && ./scripts/deploy-mission.sh
+  ```
