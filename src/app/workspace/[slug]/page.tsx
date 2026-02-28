@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
+import { AgentCardGrid } from '@/components/AgentCardGrid';
 import { AgentsSidebar } from '@/components/AgentsSidebar';
 import { MissionQueue } from '@/components/MissionQueue';
 import { LiveFeed } from '@/components/LiveFeed';
@@ -223,12 +224,8 @@ export default function WorkspacePage() {
         {/* Tab Content */}
         {activeTab === 'agents' && (
           <div className="flex-1 flex overflow-hidden">
-            {/* Agent Monitor Panel (restored) */}
-            <AgentsSidebar workspaceId={workspace.id} asPanel />
-            {/* Mission Queue */}
-            <MissionQueue workspaceId={workspace.id} />
-            {/* Live Feed */}
-            <LiveFeed />
+            {/* Premium Agent Card Grid */}
+            <AgentCardGrid workspaceId={workspace.id} />
           </div>
         )}
 

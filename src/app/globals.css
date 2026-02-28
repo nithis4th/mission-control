@@ -140,6 +140,19 @@ body {
   box-shadow: 0 0 10px var(--mc-accent-green), 0 0 20px var(--mc-accent-green);
 }
 
+/* Agent Card hover glow */
+.agent-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  will-change: transform, box-shadow;
+}
+
+.agent-card:hover {
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 0 20px color-mix(in srgb, var(--agent-color, #58a6ff) 18%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--agent-color, #58a6ff) 25%, transparent);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    2nd Brain — Markdown Content Styles (Obsidian-like)
    ═══════════════════════════════════════════════════════════════════════════ */

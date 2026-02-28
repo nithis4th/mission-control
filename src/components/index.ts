@@ -1,6 +1,7 @@
 export { Header } from './Header';
 export { Sidebar } from './Sidebar';
 export { AgentsSidebar } from './AgentsSidebar';
+export { AgentCardGrid } from './AgentCardGrid';
 export { AgentModal } from './AgentModal';
 export { AgentStatsTab } from './AgentStatsTab';
 export { AgentHistoryTab } from './AgentHistoryTab';
