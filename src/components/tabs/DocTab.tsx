@@ -198,8 +198,21 @@ function AgentTimeline({ agentName, sessions, onClose }: { agentName: string; se
     const run = async () => {
       setLoading(true);
       try {
+        // 1) sync + read archive (preferred)
+        const agentId = (sessions[0]?.agentId || agentName).toLowerCase();
+        const arcRes = await fetch(`/api/history/archive?agent=${encodeURIComponent(agentId)}&sync=1`);
+        if (arcRes.ok) {
+          const arc = await arcRes.json();
+          const arcRows = (arc.rows || []) as Array<{ role: string; text: string; timestamp?: string | number; sessionKey: string }>;
+          if (arcRows.length > 0) {
+            setRows(arcRows);
+            return;
+          }
+        }
+
+        // 2) fallback to direct session merge
         const all: Array<{ role: string; text: string; timestamp?: string | number; sessionKey: string }> = [];
-        const unique = Array.from(new Set(sessions.map((s) => s.key))).slice(0, 12);
+        const unique = Array.from(new Set(sessions.map((s) => s.key))).slice(0, 20);
         for (const key of unique) {
           const id = encodeURIComponent(key);
           const res = await fetch(`/api/openclaw/sessions/${id}/history`);
