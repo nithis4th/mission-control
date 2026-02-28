@@ -75,3 +75,31 @@ pgrep -af "next-server|next start -p 4000|npm start" || true
 ```
 3. เปิดหน้าใน Incognito หรือ hard reload (Cmd+Shift+R)
 4. ถ้ายังไม่เปลี่ยน ให้ใส่ debug marker ชั่วคราวใน UI (เช่นข้อความเวอร์ชัน) เพื่อพิสูจน์ build ที่ browser โหลด แล้วลบออกทันทีหลังยืนยัน
+
+## Forensic Note (2026-02-28): Cron edit แล้วระบบพังจนต้อง rollback
+
+### สิ่งที่ตรวจพบหลัง incident
+- `openclaw status --deep` ตอนนี้กลับมาปกติ (gateway running)
+- `openclaw doctor` ไม่พบ schema error ใน config ปัจจุบัน
+- จาก diff `openclaw.json.bak` vs `openclaw.json` พบว่ามีการแก้หลายจุดพร้อมกัน ไม่ใช่แค่ cron:
+  1) เปลี่ยน model ของ `monalisa` จาก `claude-sonnet-4-6` → `claude-haiku-4-5`
+  2) เพิ่ม skills หลายตัวใน `dexter`
+  3) เปลี่ยน `gateway.nodes.denyCommands` เป็น key คนละ namespace
+  4) **cron.jobs ถูกลบทั้ง block** (หายทั้ง section)
+
+### Root cause (สรุป)
+- การแก้ cron/config เกิดเป็น **multi-change config drift** ในรอบเดียว
+- เมื่อ restart/reload ระบบ มีความเสี่ยง fail สูงเพราะ config ไม่ได้ถูก validate แบบเป็นขั้นก่อน
+- Incident นี้ไม่ใช่ bug หน้า UI โดยตรง แต่เป็น deploy/config safety process ที่ไม่ strict พอ
+
+### Fix Process ที่ต้องบังคับใช้ก่อน restart ทุกครั้ง
+1. backup config
+2. แก้ทีละ concern (cron อย่างเดียว)
+3. validate config ก่อน restart (`openclaw doctor` + `openclaw status --deep`)
+4. restart/reload เฉพาะหลัง validate ผ่าน
+5. verify หลัง restart (gateway + cron list + cron runs)
+
+### Guardrail ใหม่
+- ห้ามแก้ `openclaw.json` แบบรวมหลาย concern ในครั้งเดียว (cron + model + tools พร้อมกัน)
+- ถ้าจำเป็นต้องแก้หลายจุด ให้แยก commit/แยกรอบ verify
+- ถ้า incident เกิดจาก config ให้ freeze งาน UI ชั่วคราว แล้วปิด config incident ก่อนเสมอ
