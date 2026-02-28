@@ -26,13 +26,17 @@ export function TeamTab() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const loadAgents = async (manual = false) => {
     if (manual) setIsRefreshing(true);
 
     try {
-      const res = await fetch('/api/agents');
-      const data: Agent[] = res.ok ? await res.json() : [];
+      setRefreshError(null);
+      const res = await fetch(`/api/agents?t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: Agent[] = await res.json();
 
       const statusMap = new Map<string, 'working' | 'standby'>();
       for (const a of data) {
@@ -54,7 +58,9 @@ export function TeamTab() {
 
       setAgents(enriched);
       setLastUpdated(new Date());
-    } catch {
+      setRefreshCount((x) => x + 1);
+    } catch (err) {
+      setRefreshError(err instanceof Error ? err.message : 'refresh failed');
       setAgents(KNOWN_AGENTS.map((a) => ({ ...a, status: 'standby' as const })));
     } finally {
       setLoading(false);
@@ -93,6 +99,7 @@ export function TeamTab() {
                 · updated {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             )}
+            <span className="ml-2 opacity-40">· refresh #{refreshCount}</span>
           </p>
         </div>
         <button
@@ -103,6 +110,12 @@ export function TeamTab() {
           {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
+
+      {refreshError && (
+        <div className="mb-3 text-[11px] text-red-400/90 bg-red-500/10 border border-red-500/30 rounded px-2 py-1">
+          Refresh error: {refreshError}
+        </div>
+      )}
 
       <div className="grid gap-3">
         {agents.map((agent) => (
