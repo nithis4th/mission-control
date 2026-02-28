@@ -44,3 +44,34 @@ cd ~/mission-control && pkill -9 -f "next-server|next start -p 4000|npm start" |
 1. อ่านไฟล์นี้ก่อน (`LESSONS.md`)
 2. สรุปในใจว่า risk รอบนี้คืออะไร (code/runtime/cache/communication)
 3. เลือกวิธี verify ที่วัดผลได้จริงบน UI
+
+## Playbook: แก้โค้ดแล้ว Interface ยังไม่เปลี่ยน (UI Stale)
+
+### อาการ
+- commit ใหม่แล้ว แต่หน้าเว็บยังแสดง UI เดิม
+- ปุ่ม/ข้อความที่แก้ไม่เปลี่ยน
+- บางครั้งเปลี่ยนชั่วคราวแล้วเด้งกลับ
+
+### สาเหตุที่พบบ่อย
+1. `next-server` ตัวเก่ายังรันอยู่ (serve build เก่า)
+2. มีหลาย process ชนกันบนพอร์ต 4000
+3. `.next` cache ยังอ้าง bundle เดิม
+4. browser cache ค้าง
+5. อัปเดตโค้ดแล้วแต่ runtime ยังไม่ restart ด้วย build ใหม่
+
+### วิธีแก้มาตรฐาน (one-liner)
+```bash
+cd ~/mission-control && pkill -9 -f "next-server|next start -p 4000|npm start" || true; git checkout main && git pull origin main && rm -rf .next node_modules/.cache && npm run build && npm start
+```
+
+### วิธี verify ว่าหายจริง
+1. เช็ค commit ปัจจุบัน
+```bash
+cd ~/mission-control && git log --oneline -1
+```
+2. เช็ค process ที่รันอยู่
+```bash
+pgrep -af "next-server|next start -p 4000|npm start" || true
+```
+3. เปิดหน้าใน Incognito หรือ hard reload (Cmd+Shift+R)
+4. ถ้ายังไม่เปลี่ยน ให้ใส่ debug marker ชั่วคราวใน UI (เช่นข้อความเวอร์ชัน) เพื่อพิสูจน์ build ที่ browser โหลด แล้วลบออกทันทีหลังยืนยัน
