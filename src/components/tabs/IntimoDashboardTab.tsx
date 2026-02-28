@@ -92,7 +92,7 @@ export function IntimoDashboardTab() {
             </p>
             <ol className="text-xs text-mc-text-secondary space-y-2 list-decimal list-inside">
               <li>Go to Shopify Admin → Settings → Apps and sales channels</li>
-              <li>Click "Develop apps" → "Create an app"</li>
+              <li>Click &quot;Develop apps&quot; → &quot;Create an app&quot;</li>
               <li>Enable Admin API access for: Orders, Products</li>
               <li>Install the app and copy the Admin API access token</li>
               <li>Add to your .env.local file</li>
