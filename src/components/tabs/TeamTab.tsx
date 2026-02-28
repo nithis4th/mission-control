@@ -324,9 +324,9 @@ export function TeamTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
               </div>
               <div className="text-xs text-mc-text-secondary truncate mt-0.5">Model: {agent.model}</div>
               <div className="text-xs text-mc-text-secondary mt-1">Active: {formatAgo(agent.lastActiveAt)}</div>
-              <div className="flex items-center justify-between text-[10px] text-mc-text-secondary mt-1.5 w-full max-w-[360px]">
-                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border">Today: {agent.todayTokens?.toLocaleString() || 0} tok</span>
-                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border text-mc-accent-green">Cost: ${(agent.todayCost || 0).toFixed(4)}</span>
+              <div className="grid grid-cols-[1fr_auto] items-center gap-2 text-[10px] text-mc-text-secondary mt-1.5 w-full max-w-[420px]">
+                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border whitespace-nowrap overflow-hidden text-ellipsis min-w-[230px]">Today: {agent.todayTokens?.toLocaleString() || 0} tok</span>
+                <span className="px-1.5 py-0.5 rounded bg-mc-bg border border-mc-border text-mc-accent-green whitespace-nowrap">Cost: ${(agent.todayCost || 0).toFixed(4)}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
