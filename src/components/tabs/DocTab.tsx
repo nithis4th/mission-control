@@ -173,6 +173,7 @@ export function DocTab() {
   const [sessions, setSessions] = useState<DocSession[]>([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
+  const [agentFilter, setAgentFilter] = useState('all');
   const [openSession, setOpenSession] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -197,15 +198,17 @@ export function DocTab() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return sessions;
-    const q = search.toLowerCase();
-    return sessions.filter(
-      (s) =>
+    const q = search.trim().toLowerCase();
+    return sessions.filter((s) => {
+      const passSearch = !q ||
         s.key.toLowerCase().includes(q) ||
         s.excerpt.toLowerCase().includes(q) ||
-        s.model.toLowerCase().includes(q)
-    );
-  }, [sessions, search]);
+        s.model.toLowerCase().includes(q);
+
+      const passAgent = agentFilter === 'all' || (s.agentName || s.agentId) === agentFilter;
+      return passSearch && passAgent;
+    });
+  }, [sessions, search, agentFilter]);
 
   const grouped: Record<Section, DocSession[]> = {
     today:     filtered.filter((s) => s.dateLabel === 'today'),
