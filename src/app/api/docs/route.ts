@@ -33,6 +33,8 @@ export interface DocSession {
   agentName: string;
 }
 
+const DAY_2_MS = 2 * 24 * 60 * 60 * 1000;
+
 const AGENT_NAME: Record<string, string> = {
   main: 'Eve',
   dexter: 'Dexter',
@@ -119,7 +121,16 @@ export async function GET() {
       }
     }
 
-    const chatSessions = allSessions.filter(isHumanChatSession);
+    const now = Date.now();
+    const chatSessions = allSessions.filter((sess) => {
+      if (!isHumanChatSession(sess)) return false;
+      const tsRaw = sess.updatedAt || 0;
+      const tsMs = tsRaw < 1e12 ? tsRaw * 1000 : tsRaw;
+      const isOld = tsMs > 0 && (now - tsMs > DAY_2_MS);
+      const hasAnyTokens = Boolean((sess.totalTokens || 0) > 0 || (sess.inputTokens || 0) > 0 || (sess.outputTokens || 0) > 0);
+      if (isOld && !hasAnyTokens) return false;
+      return true;
+    });
 
     const sessions: DocSession[] = chatSessions.map((s) => {
       const tsRaw = s.updatedAt || Date.now();

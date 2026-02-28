@@ -148,7 +148,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
                 if (t.startsWith('System: [') && t.includes('Exec')) return false;
                 return true;
               })
-              .slice(-20)
+               .slice(-120)
               .map((msg, i) => (
               <div
                 key={i}
@@ -293,7 +293,7 @@ export function DocTab() {
             <div>
               <h2 className="text-lg font-bold text-mc-text">History</h2>
               <p className="text-xs text-mc-text-secondary mt-0.5">
-                {sessions.length} sessions
+                {sessions.length} sessions (recent)
                 <span className="ml-2 opacity-70">· filter: {agentFilter === 'all' ? 'All' : agentFilter}</span>
                 {lastUpdated && (
                   <span className="ml-2 opacity-60">
