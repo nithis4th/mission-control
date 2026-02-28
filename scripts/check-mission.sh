@@ -21,3 +21,10 @@ if [[ -n "$TOKEN" ]]; then
 else
   echo "MC_API_TOKEN not found in .env.local"
 fi
+
+
+echo "[check] known-good tags on current commit:"
+git tag --points-at HEAD | grep '^kg-' || echo "(none)"
+
+echo "[check] latest known-good tags:"
+git tag -l 'kg-*' --sort=-creatordate | head -n 5

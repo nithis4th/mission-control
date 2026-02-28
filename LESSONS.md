@@ -103,3 +103,21 @@ pgrep -af "next-server|next start -p 4000|npm start" || true
 - ห้ามแก้ `openclaw.json` แบบรวมหลาย concern ในครั้งเดียว (cron + model + tools พร้อมกัน)
 - ถ้าจำเป็นต้องแก้หลายจุด ให้แยก commit/แยกรอบ verify
 - ถ้า incident เกิดจาก config ให้ freeze งาน UI ชั่วคราว แล้วปิด config incident ก่อนเสมอ
+
+
+
+## Known Good Baselines
+
+### kg-2026-02-28-mission-dashboard
+- commit: `8774d03`
+- date: 2026-02-28
+- verified:
+  - Mission Dashboard start/recover via `scripts/deploy-mission.sh`
+  - Team tab: filter/sort/auto-refresh + Updated pulse on manual refresh
+  - Team chat target per-agent + back button in full-page chat
+  - Team metrics phase C (last active + today tokens/cost)
+  - Cost tab and Team cost logic aligned on shared pricing calculator
+- rollback command:
+  ```bash
+  cd ~/mission-control && git fetch --tags && git checkout kg-2026-02-28-mission-dashboard
+  ```
