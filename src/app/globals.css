@@ -418,12 +418,46 @@ body {
 }
 
 @keyframes zzz-float {
-  0%, 100% { 
-    transform: translateY(0) scale(1); 
-    opacity: 0.45; 
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.45;
   }
-  50% { 
-    transform: translateY(-2px) scale(1.03); 
-    opacity: 0.7; 
+  50% {
+    transform: translateY(-2px) scale(1.03);
+    opacity: 0.7;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   16-bit Role Zone Animations
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Zone glow border pulse for active zones */
+.zone-glow-border {
+  animation: zone-border-pulse 3s ease-in-out infinite;
+}
+
+@keyframes zone-border-pulse {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.25; }
+}
+
+/* QA/Security screen alert flicker */
+.zone-screen-alert {
+  animation: screen-alert 2s ease-in-out infinite;
+}
+
+@keyframes screen-alert {
+  0%, 100% { fill: #1a0808; }
+  50% { fill: #220a0a; }
+}
+
+/* Sprint Bay speed lines */
+.zone-speed-lines {
+  animation: speed-flash 1.2s ease-in-out infinite;
+}
+
+@keyframes speed-flash {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.6; }
 }
