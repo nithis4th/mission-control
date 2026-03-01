@@ -183,21 +183,18 @@ export function createRestoreBranchFromRef(
 
   const hash = run(`git rev-parse ${ref}`);
   const shortHash = hash.slice(0, 8);
-  const branchLabel = slug(label || ref);
-  const ts = Date.now();
-  const branch = `restore/${branchLabel}-${shortHash}-${ts}`;
 
-  run(`git branch ${branch} ${hash}`);
-  run(`git checkout ${branch}`);
+  run(`git worktree prune`);
+  run(`git checkout ${hash} -- . ':!src/lib/versions.ts' ':!src/app/api/versions'`);
 
   return {
-    branch,
     hash,
     shortHash,
     fromRef: ref,
     autoStashed,
     discardedChanges: autoStashed,
     stashRef,
+    strategy: 'checkout-files',
   };
 }
 
