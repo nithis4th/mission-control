@@ -58,6 +58,46 @@ export function listVersions(limit = 100): VersionItem[] {
     .slice(0, n);
 }
 
+export function getCurrentBranch(): string {
+  return run('git branch --show-current');
+}
+
+export function deleteVersionTag(ref: string): { ok: true; deletedTag: string } {
+  const tag = decodeURIComponent(ref);
+  run(`git rev-parse --verify refs/tags/${tag}`);
+  run(`git tag -d ${tag}`);
+  return { ok: true, deletedTag: tag };
+}
+
+export function renameVersionTag(ref: string, newLabel: string): { ok: true; oldTag: string; newTag: string } {
+  const oldTag = decodeURIComponent(ref);
+  run(`git rev-parse --verify refs/tags/${oldTag}`);
+
+  const safeLabel = slug(newLabel);
+  if (!safeLabel) throw new Error('newLabel is required');
+
+  const tsMatch = oldTag.match(/-(\d{8}-\d{6})$/);
+  const stamp = tsMatch
+    ? tsMatch[1]
+    : (() => {
+        const t = new Date();
+        const y = String(t.getFullYear());
+        const mo = String(t.getMonth() + 1).padStart(2, '0');
+        const d = String(t.getDate()).padStart(2, '0');
+        const h = String(t.getHours()).padStart(2, '0');
+        const mi = String(t.getMinutes()).padStart(2, '0');
+        const s = String(t.getSeconds()).padStart(2, '0');
+        return `${y}${mo}${d}-${h}${mi}${s}`;
+      })();
+
+  const newTag = `${VERSION_TAG_PREFIX}${safeLabel}-${stamp}`;
+  run(`git rev-parse --verify ${oldTag}`);
+  run(`git tag ${newTag} ${oldTag}`);
+  run(`git tag -d ${oldTag}`);
+
+  return { ok: true, oldTag, newTag };
+}
+
 function cleanupOldVersionTags() {
   const versions = listVersions(500);
   if (versions.length <= KEEP_MIN) return;
@@ -119,18 +159,46 @@ export function getDiff(ref: string): { files: string[]; diffText: string } {
   return { files, diffText };
 }
 
-export function createRestoreBranchFromRef(ref: string, label?: string): { branch: string; hash: string; shortHash: string; fromRef: string } {
-  ensureCleanWorkingTree();
+export function createRestoreBranchFromRef(
+  ref: string,
+  label?: string
+): {
+  branch: string;
+  hash: string;
+  shortHash: string;
+  fromRef: string;
+  autoStashed: boolean;
+  discardedChanges: boolean;
+  stashRef: string | null;
+} {
+  let autoStashed = false;
+  let stashRef: string | null = null;
+
+  const status = run('git status --porcelain');
+  if (status) {
+    run('git stash push -m "auto-stash before restore"');
+    autoStashed = true;
+    stashRef = run('git stash list --format="%gd" -n 1');
+  }
 
   const hash = run(`git rev-parse ${ref}`);
   const shortHash = hash.slice(0, 8);
   const branchLabel = slug(label || ref);
   const branch = `restore/${branchLabel}-${shortHash}`;
 
-  // create or reset branch to the ref commit
+  // create/reset branch to target commit and switch immediately
   run(`git branch -f ${branch} ${hash}`);
+  run(`git checkout ${branch}`);
 
-  return { branch, hash, shortHash, fromRef: ref };
+  return {
+    branch,
+    hash,
+    shortHash,
+    fromRef: ref,
+    autoStashed,
+    discardedChanges: autoStashed,
+    stashRef,
+  };
 }
 
 export function switchBranch(branch: string): { branch: string } {

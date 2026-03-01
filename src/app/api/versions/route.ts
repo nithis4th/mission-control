@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { execSync } from 'child_process';
-import { listVersions } from '@/lib/versions';
+import { getCurrentBranch, listVersions } from '@/lib/versions';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
   try {
     const limit = Number(request.nextUrl.searchParams.get('limit') || '100');
     const versions = listVersions(limit);
-    return NextResponse.json({ versions });
+    const currentBranch = getCurrentBranch();
+    return NextResponse.json({ versions, currentBranch });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
