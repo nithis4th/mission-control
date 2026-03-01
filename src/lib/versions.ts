@@ -184,20 +184,14 @@ export function createRestoreBranchFromRef(
   const hash = run(`git rev-parse ${ref}`);
   const shortHash = hash.slice(0, 8);
   const branchLabel = slug(label || ref);
-  const branch = `restore/${branchLabel}-${shortHash}`;
+  const ts = Date.now();
+  const branch = `restore/${branchLabel}-${shortHash}-${ts}`;
 
-  // avoid force-updating branch names used by worktrees
-  const branchExists = run(`git branch --list ${branch}`).trim();
-  let finalBranch = branch;
-  if (branchExists) {
-    finalBranch = `${branch}-${Date.now()}`;
-  }
-
-  run(`git branch ${finalBranch} ${hash}`);
-  run(`git checkout ${finalBranch}`);
+  run(`git branch ${branch} ${hash}`);
+  run(`git checkout ${branch}`);
 
   return {
-    branch: finalBranch,
+    branch,
     hash,
     shortHash,
     fromRef: ref,
