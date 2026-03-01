@@ -15,11 +15,11 @@ import {
   CheckSquare,
   Building2,
   Users,
-  BrainCircuit,
   DollarSign,
   Clock,
   Wrench,
   ShoppingBag,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useMissionControl } from '@/lib/store';
 
@@ -41,6 +41,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    emoji: '📊',
+    icon: <LayoutDashboard className="w-3.5 h-3.5" />,
+  },
   {
     id: 'agents',
     label: 'Agents',
@@ -82,12 +88,6 @@ const navItems: NavItem[] = [
     label: 'Team',
     emoji: '👥',
     icon: <Users className="w-3.5 h-3.5" />,
-  },
-  {
-    id: 'soul',
-    label: 'Soul',
-    emoji: '🧠',
-    icon: <BrainCircuit className="w-3.5 h-3.5" />,
   },
   {
     id: 'cost',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, RefreshCw } from 'lucide-react';
 import { useMissionControl } from '@/lib/store';
 import type { Agent, AgentStatus, OpenClawSession } from '@/lib/types';
 import { AgentModal } from './AgentModal';
@@ -39,6 +39,9 @@ interface AgentCardGridProps {
   workspaceId?: string;
 }
 
+const ACTIVE_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
+const POLL_INTERVAL_MS = 15000; // 15 seconds
+
 export function AgentCardGrid({ workspaceId }: AgentCardGridProps) {
   const { agents, tasks, selectedAgent, setSelectedAgent, agentOpenClawSessions, setAgentOpenClawSession } = useMissionControl();
   const [filter, setFilter] = useState<FilterTab>('all');
@@ -47,46 +50,56 @@ export function AgentCardGrid({ workspaceId }: AgentCardGridProps) {
   const [showDiscoverModal, setShowDiscoverModal] = useState(false);
   const [liveAgentIds, setLiveAgentIds] = useState<Set<string>>(new Set());
   const [liveSessionsLoaded, setLiveSessionsLoaded] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [justRefreshed, setJustRefreshed] = useState(false);
 
   // Poll live Gateway sessions to determine real agent status
-  useEffect(() => {
-    const pollLiveSessions = async () => {
-      try {
-        const res = await fetch('/api/openclaw/sessions');
-        if (!res.ok) return;
-        const data = await res.json();
-        let sessionsList: Array<{ key?: string }> = [];
-        if (data?.sessions?.sessions && Array.isArray(data.sessions.sessions)) {
-          sessionsList = data.sessions.sessions;
-        } else if (Array.isArray(data?.sessions)) {
-          sessionsList = data.sessions;
-        }
-
-        const THIRTY_MIN_MS = 30 * 60 * 1000;
-        const now = Date.now();
-        const activeIds = new Set<string>();
-        for (const session of sessionsList) {
-          const key = session.key || '';
-          const match = key.match(/^agent:([^:]+):/);
-          if (!match) continue;
-          const updatedAtRaw = Number((session as { updatedAt?: number }).updatedAt || 0);
-          if (!updatedAtRaw) continue;
-          const updatedAtMs = updatedAtRaw < 1e12 ? updatedAtRaw * 1000 : updatedAtRaw;
-          if (now - updatedAtMs <= THIRTY_MIN_MS) {
-            activeIds.add(match[1].toLowerCase());
-          }
-        }
-        setLiveAgentIds(activeIds);
-        setLiveSessionsLoaded(true);
-      } catch (error) {
-        console.error('Failed to poll live sessions:', error);
+  const pollLiveSessions = useCallback(async () => {
+    try {
+      const res = await fetch('/api/openclaw/sessions');
+      if (!res.ok) return;
+      const data = await res.json();
+      let sessionsList: Array<{ key?: string }> = [];
+      if (data?.sessions?.sessions && Array.isArray(data.sessions.sessions)) {
+        sessionsList = data.sessions.sessions;
+      } else if (Array.isArray(data?.sessions)) {
+        sessionsList = data.sessions;
       }
-    };
 
-    pollLiveSessions();
-    const interval = setInterval(pollLiveSessions, 15000);
-    return () => clearInterval(interval);
+      const now = Date.now();
+      const activeIds = new Set<string>();
+      for (const session of sessionsList) {
+        const key = session.key || '';
+        const match = key.match(/^agent:([^:]+):/);
+        if (!match) continue;
+        const updatedAtRaw = Number((session as { updatedAt?: number }).updatedAt || 0);
+        if (!updatedAtRaw) continue;
+        const updatedAtMs = updatedAtRaw < 1e12 ? updatedAtRaw * 1000 : updatedAtRaw;
+        if (now - updatedAtMs <= ACTIVE_WINDOW_MS) {
+          activeIds.add(match[1].toLowerCase());
+        }
+      }
+      setLiveAgentIds(activeIds);
+      setLiveSessionsLoaded(true);
+    } catch (error) {
+      console.error('Failed to poll live sessions:', error);
+    }
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await pollLiveSessions();
+    setIsRefreshing(false);
+    setJustRefreshed(true);
+    setTimeout(() => setJustRefreshed(false), 1200);
+  }, [pollLiveSessions]);
+
+  useEffect(() => {
+    pollLiveSessions();
+    const interval = setInterval(pollLiveSessions, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [pollLiveSessions]);
+
 
   // Load OpenClaw session status for all agents
   const loadOpenClawSessions = useCallback(async () => {
@@ -169,6 +182,19 @@ export function AgentCardGrid({ workspaceId }: AgentCardGridProps) {
           >
             <Search className="w-3.5 h-3.5" />
             Import
+          </button>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border transition-colors ${
+              isRefreshing || justRefreshed
+                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                : 'bg-mc-bg-tertiary hover:bg-mc-border border-mc-border text-mc-text-secondary hover:text-mc-text'
+            }`}
+            title="Refresh agent status now"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing || justRefreshed ? 'Updated' : 'Refresh'}
           </button>
           <button
             onClick={() => setShowCreateModal(true)}

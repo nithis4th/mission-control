@@ -13,6 +13,7 @@ import { PixelOffice } from '@/components/PixelOffice';
 import { SSEDebugPanel } from '@/components/SSEDebugPanel';
 import { ChatPanel } from '@/components/ChatPanel';
 import { TeamTab } from '@/components/tabs/TeamTab';
+import { DashboardTab } from '@/components/tabs/DashboardTab';
 import { SoulTab } from '@/components/tabs/SoulTab';
 import { CostTab } from '@/components/tabs/CostTab';
 import { CronTab } from '@/components/tabs/CronTab';
@@ -42,7 +43,7 @@ export default function WorkspacePage() {
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState('agents');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // Connect to SSE for real-time updates
   useSSE();
@@ -222,6 +223,12 @@ export default function WorkspacePage() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Tab Content */}
+        {activeTab === 'dashboard' && (
+          <div className="flex-1 flex overflow-hidden">
+            <DashboardTab />
+          </div>
+        )}
+
         {activeTab === 'agents' && (
           <div className="flex-1 flex overflow-hidden">
             {/* Premium Agent Card Grid */}
