@@ -19,7 +19,6 @@ import {
   Clock,
   Wrench,
   ShoppingBag,
-  LayoutDashboard,
 } from 'lucide-react';
 import { useMissionControl } from '@/lib/store';
 
@@ -41,12 +40,6 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    emoji: '📊',
-    icon: <LayoutDashboard className="w-3.5 h-3.5" />,
-  },
   {
     id: 'agents',
     label: 'Agents',
