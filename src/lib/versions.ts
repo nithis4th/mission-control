@@ -186,12 +186,18 @@ export function createRestoreBranchFromRef(
   const branchLabel = slug(label || ref);
   const branch = `restore/${branchLabel}-${shortHash}`;
 
-  // create/reset branch to target commit and switch immediately
-  run(`git branch -f ${branch} ${hash}`);
-  run(`git checkout ${branch}`);
+  // avoid force-updating branch names used by worktrees
+  const branchExists = run(`git branch --list ${branch}`).trim();
+  let finalBranch = branch;
+  if (branchExists) {
+    finalBranch = `${branch}-${Date.now()}`;
+  }
+
+  run(`git branch ${finalBranch} ${hash}`);
+  run(`git checkout ${finalBranch}`);
 
   return {
-    branch,
+    branch: finalBranch,
     hash,
     shortHash,
     fromRef: ref,
