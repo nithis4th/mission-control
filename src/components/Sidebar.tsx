@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
   },
   {
     id: 'docs',
-    label: 'Doc',
+    label: 'Document',
     emoji: '📄',
     icon: <FileText className="w-3.5 h-3.5" />,
   },

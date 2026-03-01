@@ -26,11 +26,20 @@ export function createRollbackPoint(note?: string): RollbackPoint {
   }
 
   const hash = run('git rev-parse HEAD');
+
+  // Keep rollback commits reachable across hard resets.
+  // Tag name example: rollback-point-20260301T134500123Z-a1b2c3d
+  const shortHash = run('git rev-parse --short HEAD');
+  const safeTs = iso.replace(/[^0-9A-Za-z]/g, '');
+  const tagName = `rollback-point-${safeTs}-${shortHash}`;
+  run(`git tag -a ${tagName} ${hash} -m ${JSON.stringify(msg)}`);
+
   return { hash, timestamp: iso, message: msg };
 }
 
 export function listRollbackPoints(limit = 30): RollbackPoint[] {
-  const out = run(`git log --grep='^rollback-point:' --pretty=format:'%H|%cI|%s' -n ${Math.max(1, Math.min(limit, 200))}`);
+  const n = Math.max(1, Math.min(limit, 200));
+  const out = run(`git log --all --grep='^rollback-point:' --pretty=format:'%H|%cI|%s' -n ${n}`);
   if (!out) return [];
 
   return out
