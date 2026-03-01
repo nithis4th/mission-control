@@ -43,7 +43,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     id: 'dashboard',
-    label: 'Rollback',
+    label: 'Dashboard',
     emoji: '📊',
     icon: <LayoutDashboard className="w-3.5 h-3.5" />,
   },
