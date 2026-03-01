@@ -61,7 +61,7 @@ const navItems: NavItem[] = [
   },
   {
     id: 'docs',
-    label: 'History',
+    label: 'Doc',
     emoji: '📄',
     icon: <FileText className="w-3.5 h-3.5" />,
   },
@@ -277,7 +277,7 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
             cursor: pingLoading ? 'not-allowed' : 'pointer',
             opacity: pingLoading ? 0.7 : 1,
             padding: isCollapsed ? '8px 4px' : '8px 12px',
-            fontSize: '12px',
+            fontSize: '11px',
             letterSpacing: '0.05em',
             boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
             transition: 'all 0.15s ease',
@@ -293,7 +293,7 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-1 px-1.5 space-y-0.5">
         {!isCollapsed && (
-          <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-mc-text-secondary">
+          <div className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-widest text-mc-text-secondary">
             Workspace
           </div>
         )}
@@ -319,7 +319,7 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
               </span>
               {!isCollapsed && (
                 <span
-                  className={`text-[13px] leading-5 font-medium truncate flex-1 text-left ${
+                  className={`text-[11px] font-medium truncate flex-1 text-left ${
                     isActive ? 'text-mc-accent' : ''
                   }`}
                 >
@@ -349,7 +349,7 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
       {/* Status indicator at bottom */}
       <div className="border-t border-mc-border px-2 py-2 flex-shrink-0">
         <div
-          className={`flex items-center gap-2 text-[12px] font-medium ${
+          className={`flex items-center gap-2 text-[11px] font-medium ${
             isCollapsed ? 'justify-center' : ''
           }`}
         >

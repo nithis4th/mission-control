@@ -29,11 +29,13 @@ function listAllSessionKeys(): string[] {
   }
 }
 
-// GET /api/history/archive?agent=dexter&sync=1
+// GET /api/history/archive?agent=dexter&sync=1&limit=100&offset=0
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const agent = (searchParams.get('agent') || '').toLowerCase();
   const sync = searchParams.get('sync') === '1';
+  const limit = Math.min(Number(searchParams.get('limit')) || 100, 5000);
+  const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
 
   try {
     if (sync) {
@@ -55,8 +57,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: true, note: 'pass ?agent=<id> to read archive' });
     }
 
-    const rows = await readAgentArchive(agent, 5000);
-    return NextResponse.json({ ok: true, agent, rows });
+    const { rows, total } = await readAgentArchive(agent, limit, offset);
+    return NextResponse.json({ ok: true, agent, rows, total, offset, limit });
   } catch (error) {
     const err = error instanceof Error ? error.message : 'unknown';
     return NextResponse.json({ ok: false, error: err }, { status: 500 });

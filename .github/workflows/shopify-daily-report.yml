@@ -1,0 +1,142 @@
+name: 📊 Shopify Daily Report
+
+# รันทุกวันเวลา 09:00 ICT (02:00 UTC)
+# สามารถ trigger manual ได้จาก Actions tab
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 02:00 UTC = 09:00 Bangkok (ICT/UTC+7)
+  workflow_dispatch:
+    inputs:
+      range_days:
+        description: 'จำนวนวันย้อนหลัง (default: 1)'
+        required: false
+        default: '1'
+      low_stock_threshold:
+        description: 'แจ้งเตือนสต็อกต่ำกว่า X ชิ้น (default: 5)'
+        required: false
+        default: '5'
+
+jobs:
+  shopify-report:
+    name: Generate & Send Daily Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # ─── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ─── Setup Node.js ──────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ─── Install deps (dotenv only) ─────────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          # ติดตั้งเฉพาะ dotenv สำหรับ script
+          npm install --no-save dotenv 2>/dev/null || true
+
+      # ─── Run Shopify Analytics ───────────────────────────────────────────────
+      - name: Run Shopify Analytics
+        id: analytics
+        env:
+          SHOPIFY_STORE_URL: ${{ secrets.SHOPIFY_STORE_URL }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+        run: |
+          RANGE="${{ github.event.inputs.range_days || '1' }}"
+          LOW_STOCK="${{ github.event.inputs.low_stock_threshold || '5' }}"
+
+          echo "📊 กำลังดึงข้อมูล Shopify (last ${RANGE} day(s))..."
+
+          # รัน script และเก็บ JSON output
+          node scripts/shopify-analytics.js \
+            --range "$RANGE" \
+            --low-stock "$LOW_STOCK" \
+            --json > /tmp/shopify-report.json 2>&1
+
+          echo "✅ ดึงข้อมูลสำเร็จ"
+          cat /tmp/shopify-report.json
+
+      # ─── Format & Send Telegram ──────────────────────────────────────────────
+      - name: Send Telegram Report
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # อ่านค่าจาก JSON report
+          REPORT=$(cat /tmp/shopify-report.json)
+
+          # Parse ค่าสำคัญด้วย node
+          node - <<'EOF'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/shopify-report.json', 'utf8'));
+
+          const s = report.summary;
+          const fmt = (n) => Number(n).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+          const lowStock = report.low_stock_products || [];
+          const outOfStock = lowStock.filter(p => p.inventory_quantity <= 0);
+
+          const date = new Date(report.generated_at).toLocaleDateString('th-TH', {
+            year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Bangkok'
+          });
+
+          let msg = `🛍️ *Intimo Life — Daily Report*\n`;
+          msg += `📅 ${date}\n\n`;
+          msg += `📦 *ออเดอร์ (${report.range_days} วัน)*\n`;
+          msg += `• ออเดอร์ทั้งหมด: ${s.total_orders}\n`;
+          msg += `• ออเดอร์ที่ชำระแล้ว: ${s.paid_orders}\n`;
+          msg += `• ยกเลิก: ${s.cancelled_orders}\n\n`;
+          msg += `💰 *ยอดขาย*\n`;
+          msg += `• รายได้รวม: ${s.currency} ${fmt(s.total_revenue)}\n`;
+          msg += `• AOV: ${s.currency} ${fmt(s.average_order_value)}\n`;
+          msg += `• สินค้าที่ขายได้: ${s.total_items_sold} ชิ้น\n\n`;
+          msg += `🚚 *Fulfillment*\n`;
+          msg += `• จัดส่งแล้ว: ${s.fulfilled_orders}\n`;
+          msg += `• รอจัดส่ง: ${s.pending_fulfillment}\n`;
+
+          if (lowStock.length > 0) {
+            msg += `\n⚠️ *สต็อกต่ำ (${lowStock.length} รายการ)*\n`;
+            lowStock.slice(0, 5).forEach(p => {
+              const icon = p.inventory_quantity <= 0 ? '🚨' : '⚠️';
+              const name = p.product_title.substring(0, 25);
+              msg += `${icon} ${name}: ${p.inventory_quantity} ชิ้น\n`;
+            });
+            if (lowStock.length > 5) {
+              msg += `... และอีก ${lowStock.length - 5} รายการ\n`;
+            }
+          } else {
+            msg += `\n✅ สต็อกปกติทุกรายการ\n`;
+          }
+
+          msg += `\n_Mission Control Analytics_`;
+
+          process.stdout.write(msg);
+          fs.writeFileSync('/tmp/telegram-message.txt', msg);
+          EOF
+
+          MESSAGE=$(cat /tmp/telegram-message.txt)
+
+          # ส่งไป Telegram
+          curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${TELEGRAM_CHAT_ID}\",
+              \"text\": $(echo "$MESSAGE" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+              \"parse_mode\": \"Markdown\"
+            }" | python3 -m json.tool
+
+          echo "✅ ส่ง Telegram report เรียบร้อย"
+
+      # ─── Upload report as artifact ───────────────────────────────────────────
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shopify-report-${{ github.run_id }}
+          path: /tmp/shopify-report.json
+          retention-days: 30
