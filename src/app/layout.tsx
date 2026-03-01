@@ -25,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={jetbrainsMono.variable}>
-      <body className={`${jetbrainsMono.className} bg-mc-bg text-mc-text text-sm h-screen overflow-hidden`}>
+      <body className={`${jetbrainsMono.className} bg-mc-bg text-mc-text text-lg h-screen overflow-hidden`}>
         <DemoBanner />
         <div className="h-full overflow-hidden">{children}</div>
       </body>
