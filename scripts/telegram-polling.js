@@ -2,6 +2,7 @@
 /**
  * Telegram Bot Polling (สำหรับ Local Development)
  * ดึง updates จาก Telegram ทุก 1 วินาที
+ * รองรับทั้ง Commands และข้อความทั่วไป
  */
 
 const https = require('https');
@@ -29,7 +30,7 @@ const handlers = {
 📰 /brief — Morning Brief
 ⏰ /remind — เพิ่ม Reminder
 
-💡 พิมพ์คำสั่งที่ต้องการได้เลยค่ะ`;
+💬 หรือพิมพ์ข้อความทั่วไปได้เลยค่ะ\nหนูจะตอบให้ 🦋`;
   },
 
   '/crypto': async () => {
@@ -83,6 +84,30 @@ const handlers = {
   }
 };
 
+// General message handler (for non-command text)
+async function handleGeneralMessage(text) {
+  // Check if message mentions Eve/อีฟ
+  if (text.includes('อีฟ') || text.includes('Eve') || text.includes('eve')) {
+    return `สวัสดีค่ะพี่เอก 🦋✨\n\nหนูอยู่ตรงนี้ค่ะ! มีอะไรให้ช่วยเหรอคะ?\n\n💡 ลองใช้คำสั่ง:\n• /help — ดูคำสั่งทั้งหมด\n• /crypto — ราคา BTC/ETH\n• /tasks — รายการที่ต้องทำ\n• /weather — สภาพอากาศ`;
+  }
+  
+  // Simple responses for common messages
+  if (text.includes('สวัสดี') || text.includes('หวัดดี')) {
+    return `สวัสดีค่ะพี่เอก 🦋 มีอะไรให้หนูช่วยเหรอคะ?`;
+  }
+  
+  if (text.includes('ขอบคุณ') || text.includes('thx') || text.includes('thanks')) {
+    return `ยินดีค่ะพี่เอก 🥰 มีอะไรอีกบอกหนูได้เลยนะคะ`;
+  }
+  
+  if (text.includes('ไปก่อน') || text.includes('บาย') || text.includes('bye')) {
+    return `โอเคค่ะพี่เอก ไว้เจอกันใหม่นะคะ 👋✨`;
+  }
+  
+  // Default response for other messages
+  return `ได้รับข้อความแล้วค่ะ: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"\n\n💡 พิมพ์ /help เพื่อดูคำสั่งที่ใช้ได้ หรือเรียก "อีฟ" หนูจะมาตอบค่ะ 🦋`;
+}
+
 // API Helper
 function apiCall(method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -130,18 +155,27 @@ async function poll() {
         if (message && message.text) {
           const chatId = message.chat.id;
           const text = message.text;
-          const [command, ...argsArr] = text.split(' ');
-          const args = argsArr.join(' ');
           
-          console.log(`[${new Date().toISOString()}] ${command} from ${chatId}`);
+          console.log(`[${new Date().toISOString()}] "${text.substring(0, 30)}" from ${chatId}`);
           
-          const handler = handlers[command];
-          if (handler) {
-            const response = await handler(args);
+          // Check if it's a command (starts with /)
+          if (text.startsWith('/')) {
+            const [command, ...argsArr] = text.split(' ');
+            const args = argsArr.join(' ');
+            
+            const handler = handlers[command];
+            if (handler) {
+              const response = await handler(args);
+              await sendMessage(chatId, response);
+              console.log(`  → Command replied`);
+            } else {
+              await sendMessage(chatId, '❓ ไม่รู้จักคำสั่งนี้ พิมพ์ /help ดูทั้งหมดนะคะ');
+            }
+          } else {
+            // Handle general message
+            const response = await handleGeneralMessage(text);
             await sendMessage(chatId, response);
-            console.log(`  → Replied`);
-          } else if (command.startsWith('/')) {
-            await sendMessage(chatId, '❓ ไม่รู้จักคำสั่ง พิมพ์ /help ดูทั้งหมดนะคะ');
+            console.log(`  → General message replied`);
           }
         }
       }
@@ -157,6 +191,7 @@ async function poll() {
 console.log('🤖 Telegram Bot Polling Started');
 console.log(`   Token: ${BOT_TOKEN.slice(0, 10)}...`);
 console.log(`   Polling every ${POLLING_INTERVAL}ms`);
+console.log('   Commands + General messages supported');
 console.log('   Press Ctrl+C to stop\n');
 
 poll();
