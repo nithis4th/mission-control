@@ -161,6 +161,19 @@ export function DashboardTab() {
 
   const isActiveVersion = (v: VersionItem) => currentBranch.includes(v.shortHash);
 
+  // Version Control is disabled - redirect to agents instead
+  const showVersionControl = false;
+  if (!showVersionControl) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center text-mc-text-secondary">
+          <p>Version Control is disabled.</p>
+          <p className="text-sm mt-2">Use the sidebar to navigate to other sections.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-6xl mx-auto space-y-6">

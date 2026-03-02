@@ -49,7 +49,7 @@ export function Header({ workspace }: HeaderProps) {
   const tasksInQueue = tasks.filter((t) => t.status !== 'done' && t.status !== 'review').length;
 
   return (
-    <header className="h-14 bg-mc-bg-secondary border-b border-mc-border flex items-center justify-between px-4">
+    <header className="h-14 bg-mc-bg-secondary border-b border-mc-border flex items-center justify-between px-4 neon-line-bottom" style={{ background: 'rgba(6, 10, 19, 0.85)', borderBottom: '1px solid rgba(0, 212, 255, 0.15)', boxShadow: '0 2px 20px rgba(0, 212, 255, 0.05)', backdropFilter: 'blur(16px)' }}>
       {/* Left: Logo & Title */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
@@ -90,11 +90,11 @@ export function Header({ workspace }: HeaderProps) {
       {workspace && (
         <div className="flex items-center gap-8">
           <div className="text-center">
-            <div className="text-2xl font-bold text-mc-accent-cyan">{activeAgents}</div>
+            <div className="text-2xl font-bold text-mc-accent-cyan stat-number">{activeAgents}</div>
             <div className="text-xs text-mc-text-secondary uppercase">Agents Active</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-mc-accent-purple">{tasksInQueue}</div>
+            <div className="text-2xl font-bold text-mc-accent-purple stat-number">{tasksInQueue}</div>
             <div className="text-xs text-mc-text-secondary uppercase">Tasks in Queue</div>
           </div>
         </div>
@@ -108,7 +108,7 @@ export function Header({ workspace }: HeaderProps) {
         <div
           className={`flex items-center gap-2 px-3 py-1 rounded border text-sm font-medium ${
             isOnline
-              ? 'bg-mc-accent-green/20 border-mc-accent-green text-mc-accent-green'
+              ? 'bg-mc-accent-green/20 border-mc-accent-green text-mc-accent-green header-online-indicator'
               : 'bg-mc-accent-red/20 border-mc-accent-red text-mc-accent-red'
           }`}
         >

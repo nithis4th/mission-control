@@ -244,7 +244,7 @@ export function DiscoverAgentsModal({ onClose, workspaceId }: DiscoverAgentsModa
                       </div>
 
                       {/* Avatar */}
-                      <span className="text-2xl">{isImported ? '🔗' : '🤖'}</span>
+                      <span className="text-2xl">{agent.emoji || (isImported ? '🔗' : '🤖')}</span>
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">

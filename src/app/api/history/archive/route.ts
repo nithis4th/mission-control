@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
   const sync = searchParams.get('sync') === '1';
   const limit = Math.min(Number(searchParams.get('limit')) || 100, 5000);
   const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
+  const dateFilter = searchParams.get('date') || undefined; // YYYY-MM-DD format
 
   try {
     if (sync) {
@@ -57,8 +58,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: true, note: 'pass ?agent=<id> to read archive' });
     }
 
-    const { rows, total } = await readAgentArchive(agent, limit, offset);
-    return NextResponse.json({ ok: true, agent, rows, total, offset, limit });
+    const { rows, total } = await readAgentArchive(agent, limit, offset, dateFilter);
+    return NextResponse.json({ ok: true, agent, rows, total, offset, limit, dateFilter });
   } catch (error) {
     const err = error instanceof Error ? error.message : 'unknown';
     return NextResponse.json({ ok: false, error: err }, { status: 500 });

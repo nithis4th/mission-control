@@ -14,11 +14,11 @@ interface AgentModalProps {
   onAgentCreated?: (agentId: string) => void;
 }
 
-const EMOJI_OPTIONS = ['🤖', '🦞', '💻', '🔍', '✍️', '🎨', '📊', '🧠', '⚡', '🚀', '🎯', '🔧'];
+const EMOJI_OPTIONS = ['🤖', '🦞', '💻', '🔍', '✍️', '🎨', '📊', '🧠', '⚡', '🚀', '🎯', '🔧', '🧪', '🌟', '💡', '🎲'];
 
 export function AgentModal({ agent, onClose, workspaceId, onAgentCreated }: AgentModalProps) {
   const { addAgent, updateAgent, agents } = useMissionControl();
-  const [activeTab, setActiveTab] = useState<'info' | 'soul' | 'user' | 'agents' | 'stats' | 'history'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'soul' | 'user' | 'agents' | 'knowledge' | 'stats' | 'history'>('info');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [defaultModel, setDefaultModel] = useState<string>('');
@@ -34,6 +34,7 @@ export function AgentModal({ agent, onClose, workspaceId, onAgentCreated }: Agen
     soul_md: agent?.soul_md || '',
     user_md: agent?.user_md || '',
     agents_md: agent?.agents_md || '',
+    knowledge_md: agent?.knowledge_md || '',
     model: agent?.model || '',
   });
 
@@ -98,20 +99,34 @@ export function AgentModal({ agent, onClose, workspaceId, onAgentCreated }: Agen
   };
 
   const handleDelete = async () => {
-    if (!agent || !confirm(`Delete ${agent.name}?`)) return;
+    if (!agent) return;
+    
+    // Prevent deleting master agent
+    if (agent.is_master === true) {
+      alert('Cannot delete master agent (Eve)');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete "${agent.name}"?`)) return;
 
     try {
       const res = await fetch(`/api/agents/${agent.id}`, { method: 'DELETE' });
-      if (res.ok) {
-        // Remove from store
-        useMissionControl.setState((state) => ({
-          agents: state.agents.filter((a) => a.id !== agent.id),
-          selectedAgent: state.selectedAgent?.id === agent.id ? null : state.selectedAgent,
-        }));
-        onClose();
+      const data = await res.json();
+      
+      if (!res.ok) {
+        alert(data.error || 'Failed to delete agent');
+        return;
       }
+      
+      // Remove from store
+      useMissionControl.setState((state) => ({
+        agents: state.agents.filter((a) => a.id !== agent.id),
+        selectedAgent: state.selectedAgent?.id === agent.id ? null : state.selectedAgent,
+      }));
+      onClose();
     } catch (error) {
       console.error('Failed to delete agent:', error);
+      alert('Failed to delete agent');
     }
   };
 
@@ -120,6 +135,7 @@ export function AgentModal({ agent, onClose, workspaceId, onAgentCreated }: Agen
     { id: 'soul' as const, label: 'SOUL.md' },
     { id: 'user' as const, label: 'USER.md' },
     { id: 'agents' as const, label: 'AGENTS.md' },
+    { id: 'knowledge' as const, label: 'KNOWLEDGE.md' },
   ];
 
   const tabs = agent
@@ -330,7 +346,23 @@ export function AgentModal({ agent, onClose, workspaceId, onAgentCreated }: Agen
             </div>
           )}
 
-          {activeTab === 'stats' && agent && (
+          
+          {activeTab === 'knowledge' && (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                KNOWLEDGE.md - Specialization Notes
+              </label>
+              <textarea
+                value={form.knowledge_md}
+                onChange={(e) => setForm({ ...form, knowledge_md: e.target.value })}
+                rows={15}
+                className="w-full bg-mc-bg border border-mc-border rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-mc-accent resize-none"
+                placeholder="Specialized knowledge, patterns, and expertise..."
+              />
+            </div>
+          )}
+
+{activeTab === 'stats' && agent && (
             <AgentStatsTab agentId={agent.id} />
           )}
 
@@ -346,10 +378,16 @@ export function AgentModal({ agent, onClose, workspaceId, onAgentCreated }: Agen
               <button
                 type="button"
                 onClick={handleDelete}
-                className="flex items-center gap-2 px-3 py-2 text-mc-accent-red hover:bg-mc-accent-red/10 rounded text-sm"
+                disabled={agent.is_master === true}
+                className={`flex items-center gap-2 px-3 py-2 rounded text-sm ${
+                  agent.is_master === true
+                    ? 'text-mc-text-secondary/50 cursor-not-allowed'
+                    : 'text-mc-accent-red hover:bg-mc-accent-red/10'
+                }`}
+                title={agent.is_master === true ? 'Cannot delete master agent' : 'Delete this agent'}
               >
                 <Trash2 className="w-4 h-4" />
-                Delete
+                {agent.is_master === true ? 'Cannot Delete' : 'Delete'}
               </button>
             )}
           </div>

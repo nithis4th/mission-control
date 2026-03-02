@@ -117,11 +117,12 @@ export async function readAgentArchive(
   agentId: string,
   limit = 2000,
   offset = 0,
+  dateFilter?: string, // YYYY-MM-DD format
 ): Promise<{ rows: ArchivedMessage[]; total: number }> {
   const file = archivePath(agentId.toLowerCase());
   try {
     const raw = await fs.readFile(file, 'utf-8');
-    const rows: ArchivedMessage[] = [];
+    let rows: ArchivedMessage[] = [];
     for (const line of raw.split('\n')) {
       if (!line.trim()) continue;
       try {
@@ -131,8 +132,19 @@ export async function readAgentArchive(
       }
     }
     // newest first for pagination
-    rows.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    const total = rows.length;
+    // Filter by date if provided
+    let filteredRows = rows;
+    if (dateFilter) {
+      const dateStart = new Date(dateFilter + 'T00:00:00+07:00').getTime();
+      const dateEnd = new Date(dateFilter + 'T23:59:59+07:00').getTime();
+      filteredRows = rows.filter(r => {
+        const ts = new Date(r.timestamp).getTime();
+        return ts >= dateStart && ts <= dateEnd;
+      });
+    }
+    
+    const total = filteredRows.length;
+    rows = filteredRows;
     return { rows: rows.slice(offset, offset + limit), total };
   } catch {
     return { rows: [], total: 0 };

@@ -34,6 +34,7 @@ export interface Agent {
   soul_md?: string;
   user_md?: string;
   agents_md?: string;
+  knowledge_md?: string;
   model?: string;
   source: AgentSource;
   gateway_agent_id?: string;
@@ -47,6 +48,7 @@ export interface DiscoveredAgent {
   name: string;
   label?: string;
   model?: string;
+  emoji?: string;
   channel?: string;
   status?: string;
   already_imported: boolean;
@@ -243,6 +245,7 @@ export interface CreateAgentRequest {
   soul_md?: string;
   user_md?: string;
   agents_md?: string;
+  knowledge_md?: string;
   model?: string;
 }
 

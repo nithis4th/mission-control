@@ -149,6 +149,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
 
+    // Prevent deleting master agent (Eve)
+    if (existing.is_master === true) {
+      return NextResponse.json({ error: 'Cannot delete master agent' }, { status: 403 });
+    }
+
     // Delete or nullify related records first (foreign key constraints)
     run('DELETE FROM openclaw_sessions WHERE agent_id = ?', [id]);
     run('DELETE FROM events WHERE agent_id = ?', [id]);

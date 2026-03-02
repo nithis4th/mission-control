@@ -310,7 +310,7 @@ export function CostTab() {
         </div>
       )}
 
-      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-5 mb-6">
+      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-5 mb-6">
         <h3 className="text-sm font-semibold mb-4 text-mc-text">Cost Trend (Last 7 Days)</h3>
         {trendData.length > 0 ? (
           <ResponsiveContainer width="100%" height={240}>
@@ -345,7 +345,7 @@ export function CostTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-5">
+        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-5">
           <h3 className="text-sm font-semibold mb-4 text-mc-text">Model Distribution (tokens)</h3>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
@@ -388,7 +388,7 @@ export function CostTab() {
           )}
         </div>
 
-        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-5">
+        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-5">
           <h3 className="text-sm font-semibold mb-4 text-mc-text">Model Breakdown</h3>
           <div className="space-y-2">
             {(activeData.modelBreakdown || []).map((m, i) => (

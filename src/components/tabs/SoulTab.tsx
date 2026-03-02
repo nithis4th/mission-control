@@ -146,7 +146,7 @@ export function SoulTab() {
           <textarea
             value={content}
             onChange={(e) => handleChange(e.target.value)}
-            className="w-full h-full bg-mc-bg border border-mc-border rounded-xl p-4 font-mono text-sm text-mc-text resize-none focus:outline-none focus:border-mc-accent/60 leading-relaxed"
+            className="w-full h-full bg-mc-bg border border-mc-border rounded-xl glow-input p-4 font-mono text-sm text-mc-text resize-none focus:outline-none focus:border-mc-accent/60 leading-relaxed"
             placeholder="# SOUL.md&#10;&#10;Agent identity file is empty or not found..."
             spellCheck={false}
           />

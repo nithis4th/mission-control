@@ -20,7 +20,9 @@ import {
   Wrench,
   ShoppingBag,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useMissionControl } from '@/lib/store';
+import { staggerContainer, sidebarItemVariants } from '@/lib/animations';
 
 interface SidebarProps {
   workspaceSlug: string;
@@ -220,11 +222,11 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
   const sidebarContent = (
     <>
       {/* Header */}
-      <div className="h-12 flex items-center border-b border-mc-border px-2.5 flex-shrink-0">
+      <div className="h-12 flex items-center border-b border-mc-border px-2.5 flex-shrink-0" style={{ background: 'var(--mc-gradient-header)' }}>
         {!isCollapsed && (
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Zap className="w-4 h-4 text-mc-accent-cyan flex-shrink-0" />
-            <span className="font-semibold text-xs uppercase tracking-wider truncate">
+            <Zap className="w-4 h-4 text-mc-accent-cyan flex-shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(0, 212, 255, 0.5))' }} />
+            <span className="font-semibold text-xs uppercase truncate" style={{ letterSpacing: '0.15em', fontSize: '11px', color: 'var(--mc-text-secondary)' }}>
               Mission Control
             </span>
           </div>
@@ -250,7 +252,9 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
 
       {/* Ping Eve Button */}
       <div className={`flex-shrink-0 ${isCollapsed ? 'px-1.5 pt-3 pb-2' : 'px-2 pt-3 pb-2'}`}>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={handlePingEve}
           disabled={pingLoading}
           title="Ping Eve"
@@ -262,29 +266,40 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
             gap: '6px',
             borderRadius: '12px',
             fontWeight: 700,
-            background: pingLoading
-              ? 'linear-gradient(135deg, #6d28d9, #a21caf)'
-              : 'linear-gradient(135deg, #7c3aed, #c026d3, #ec4899)',
-            color: '#fff',
-            border: 'none',
+            background: pingLoading ? 'rgba(0, 212, 255, 0.2)' : 'rgba(0, 212, 255, 0.1)',
+            color: 'var(--mc-accent-cyan)',
+            border: '1px solid rgba(0, 212, 255, 0.3)',
             cursor: pingLoading ? 'not-allowed' : 'pointer',
             opacity: pingLoading ? 0.7 : 1,
             padding: isCollapsed ? '8px 4px' : '8px 12px',
             fontSize: '11px',
             letterSpacing: '0.05em',
-            boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
-            transition: 'all 0.15s ease',
+            boxShadow: pingLoading ? 'var(--mc-glow-cyan)' : 'none',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 212, 255, 0.2)';
+            e.currentTarget.style.boxShadow = 'var(--mc-glow-cyan)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = pingLoading ? 'rgba(0, 212, 255, 0.2)' : 'rgba(0, 212, 255, 0.1)';
+            e.currentTarget.style.boxShadow = pingLoading ? 'var(--mc-glow-cyan)' : 'none';
           }}
         >
           <span style={{ fontSize: '16px', lineHeight: 1 }}>
             {pingLoading ? '⏳' : '🦋'}
           </span>
           {!isCollapsed && <span>Ping Eve</span>}
-        </button>
+        </motion.button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-1 px-1.5 space-y-0.5">
+      <motion.nav
+        className="flex-1 overflow-y-auto py-1 px-1.5 space-y-0.5"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+      >
         {!isCollapsed && (
           <div className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-widest text-mc-text-secondary">
             Workspace
@@ -293,6 +308,7 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
+            <motion.div key={`anim-${item.id}`} variants={sidebarItemVariants}>
             <button
               key={item.id}
               onClick={() => handleNavClick(item)}
@@ -300,14 +316,32 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
                 ${isCollapsed ? 'px-1.5 py-2 justify-center' : 'px-2 py-1.5'}
                 ${
                   isActive
-                    ? 'bg-mc-accent/10 text-mc-accent border-l-2 border-mc-accent'
-                    : 'text-mc-text-secondary hover:bg-mc-bg-tertiary hover:text-mc-text border-l-2 border-transparent'
+                    ? 'text-mc-accent border-l-2'
+                    : 'text-mc-text-secondary border-l-2 border-transparent hover:text-mc-text'
                 }
                 ${item.comingSoon ? 'opacity-60 hover:opacity-80' : ''}
               `}
+              style={isActive ? {
+                borderLeftColor: 'var(--mc-accent-cyan)',
+                background: 'rgba(0, 212, 255, 0.08)',
+                color: 'var(--mc-accent-cyan)',
+                boxShadow: 'inset 3px 0 10px rgba(0, 212, 255, 0.1)'
+              } : {
+                borderLeftColor: 'transparent',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                }
+              }}
               title={isCollapsed ? item.label : undefined}
             >
-              <span className={`flex-shrink-0 ${isActive ? 'text-mc-accent' : ''}`}>
+              <span className={`sidebar-icon flex-shrink-0 ${isActive ? 'text-mc-accent' : ''}`}>
                 {item.icon}
               </span>
               {!isCollapsed && (
@@ -335,9 +369,10 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
                 </div>
               )}
             </button>
+            </motion.div>
           );
         })}
-      </nav>
+      </motion.nav>
 
       {/* Status indicator at bottom */}
       <div className="border-t border-mc-border px-2 py-2 flex-shrink-0">
@@ -390,12 +425,16 @@ export function Sidebar({ workspaceSlug, activeTab, onTabChange }: SidebarProps)
       {/* Sidebar */}
       <aside
         className={`
-          bg-mc-bg-secondary border-r border-mc-border flex flex-col flex-shrink-0
+          border-r border-mc-border flex flex-col flex-shrink-0
           transition-all duration-300 ease-in-out
           ${isCollapsed ? 'w-[50px]' : 'w-[200px]'}
           fixed lg:relative inset-y-0 left-0 z-50
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
+        style={{
+          background: 'var(--mc-gradient-sidebar)',
+          borderRight: '1px solid var(--mc-glass-border)',
+        }}
       >
         {sidebarContent}
       </aside>

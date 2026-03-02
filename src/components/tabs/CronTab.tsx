@@ -100,7 +100,7 @@ export function CronTab() {
           <p className="text-sm">No cron jobs configured</p>
         </div>
       ) : (
-        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl overflow-hidden">
+        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-mc-border text-[10px] uppercase tracking-wider text-mc-text-secondary">

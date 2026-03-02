@@ -24,7 +24,7 @@ function ApprovalCard({
   const isProcessing = processing === task.id;
 
   return (
-    <div className={`bg-mc-bg-secondary border border-mc-border rounded-xl p-5 transition-all duration-200 ${isProcessing ? 'opacity-60 pointer-events-none' : 'hover:border-mc-accent-yellow/30'}`}>
+    <div className={`bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-5 transition-all duration-200 ${isProcessing ? 'opacity-60 pointer-events-none' : 'hover:border-mc-accent-yellow/30'}`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-mc-text leading-snug">{task.title}</h3>

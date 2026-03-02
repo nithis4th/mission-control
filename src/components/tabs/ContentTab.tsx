@@ -30,7 +30,7 @@ function formatDateDisplay(iso: string): string {
 function BriefCard({ item, onOpen }: { item: BriefItem; onOpen: (item: BriefItem) => void }) {
   return (
     <div
-      className="bg-mc-bg-secondary border border-mc-border rounded-xl p-4 hover:border-mc-accent/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-pointer group"
+      className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-4 hover:border-mc-accent/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-pointer group"
       onClick={() => onOpen(item)}
     >
       <div className="flex items-start justify-between gap-3 mb-2">
@@ -67,7 +67,7 @@ function ContentModal({ item, onClose }: { item: BriefItem; onClose: () => void 
       onClick={onClose}
     >
       <div
-        className="bg-mc-bg-secondary border border-mc-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
+        className="bg-mc-bg-secondary border border-mc-border rounded-2xl glow-card w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-mc-border flex-shrink-0">

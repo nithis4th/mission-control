@@ -154,7 +154,7 @@ function SessionMessages({ sessionKey, onClose }: { sessionKey: string; onClose:
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-mc-bg-secondary border border-mc-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-mc-bg-secondary border border-mc-border rounded-2xl glow-card w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5 border-b border-mc-border flex-shrink-0">
           <div className="flex-1 min-w-0 pr-4">
             <h2 className="text-sm font-bold text-mc-text font-mono truncate">{shortKey(sessionKey)}</h2>
@@ -268,7 +268,7 @@ function AgentTimeline({ agentName, sessions, onClose }: { agentName: string; se
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-mc-bg-secondary border border-mc-border rounded-2xl w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-mc-bg-secondary border border-mc-border rounded-2xl glow-card w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5 border-b border-mc-border flex-shrink-0">
           <div>
             <h2 className="text-sm font-bold text-mc-text">{agentName} Timeline</h2>
@@ -623,7 +623,7 @@ export function DocTab() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search history..."
-              className="w-full bg-mc-bg border border-mc-border rounded-lg pl-9 pr-4 py-2 text-sm text-mc-text placeholder:text-mc-text-secondary/50 focus:outline-none focus:border-mc-accent/50 transition-colors"
+              className="w-full bg-mc-bg border border-mc-border rounded-lg glow-input pl-9 pr-4 py-2 text-sm text-mc-text placeholder:text-mc-text-secondary/50 focus:outline-none focus:border-mc-accent/50 transition-colors"
             />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-mc-text-secondary hover:text-mc-text text-sm">×</button>
@@ -653,7 +653,7 @@ export function DocTab() {
                         <div className="flex-1 h-px bg-mc-border" />
                         <span className="text-[10px] text-mc-text-secondary">{msgs.length}</span>
                       </div>
-                      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl overflow-hidden">
+                      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card overflow-hidden">
                         {msgs.map((row, i) => (
                           <ArchiveMessageRow
                             key={row.id || `${dateKey}-${i}`}
@@ -700,7 +700,7 @@ export function DocTab() {
                         <div className="flex-1 h-px bg-mc-border" />
                         <span className="text-[10px] text-mc-text-secondary">{items.length}</span>
                       </div>
-                      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl overflow-hidden">
+                      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card overflow-hidden">
                         {items.map((session) => (
                           <SessionRow key={session.key} session={session} onOpen={() => setOpenSession(session.key)} />
                         ))}

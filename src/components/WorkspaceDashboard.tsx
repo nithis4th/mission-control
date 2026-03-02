@@ -42,7 +42,7 @@ export function WorkspaceDashboard() {
   return (
     <div className="h-full bg-mc-bg overflow-hidden flex flex-col">
       {/* Header */}
-      <header className="border-b border-mc-border bg-mc-bg-secondary">
+      <header className="border-b border-mc-border bg-mc-bg-secondary neon-line-bottom" style={{ background: 'rgba(6, 10, 19, 0.85)', borderBottom: '1px solid rgba(0, 212, 255, 0.15)', boxShadow: '0 2px 20px rgba(0, 212, 255, 0.05)', backdropFilter: 'blur(16px)' }}>
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ export function WorkspaceDashboard() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-mc-accent text-mc-bg rounded-lg font-medium hover:bg-mc-accent/90"
+              className="flex items-center gap-2 px-3 py-1.5 glow-button font-medium"
             >
               <Plus className="w-4 h-4" />
               New Workspace
@@ -78,7 +78,7 @@ export function WorkspaceDashboard() {
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-mc-accent text-mc-bg rounded-lg font-medium hover:bg-mc-accent/90"
+              className="px-6 py-3 glow-button font-medium"
             >
               Create Workspace
             </button>
@@ -96,7 +96,7 @@ export function WorkspaceDashboard() {
             {/* Add workspace card */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="border-2 border-dashed border-mc-border rounded-xl p-4 hover:border-mc-accent/50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[150px]"
+              className="border-2 border-dashed border-mc-border rounded-xl p-4 hover:border-mc-accent/50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[150px] glow-card"
             >
               <div className="w-12 h-12 rounded-full bg-mc-bg-tertiary flex items-center justify-center">
                 <Plus className="w-6 h-6 text-mc-text-secondary" />
@@ -148,7 +148,7 @@ function WorkspaceCard({ workspace, onDelete }: { workspace: WorkspaceStats; onD
   return (
     <>
     <Link href={`/workspace/${workspace.slug}`}>
-      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-4 hover:border-mc-accent/50 transition-all hover:shadow-lg cursor-pointer group relative">
+      <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-4 hover:border-mc-accent/50 transition-all hover:shadow-lg cursor-pointer group relative glow-card">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{workspace.icon}</span>
@@ -308,7 +308,7 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Acme Corp"
-              className="w-full bg-mc-bg border border-mc-border rounded-lg px-4 py-2 focus:outline-none focus:border-mc-accent"
+              className="w-full bg-mc-bg border border-mc-border rounded-lg px-4 py-2 glow-input"
               autoFocus
             />
           </div>
@@ -328,7 +328,7 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
             <button
               type="submit"
               disabled={!name.trim() || isSubmitting}
-              className="px-6 py-2 bg-mc-accent text-mc-bg rounded-lg font-medium hover:bg-mc-accent/90 disabled:opacity-50"
+              className="px-6 py-2 glow-button font-medium disabled:opacity-50"
             >
               {isSubmitting ? 'Creating...' : 'Create Workspace'}
             </button>

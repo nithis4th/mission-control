@@ -86,7 +86,7 @@ export function IntimoDashboardTab() {
           <p className="text-sm text-mc-text-secondary mb-6">
             To view your Intimo Life dashboard, you need to connect your Shopify store.
           </p>
-          <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-4 text-left">
+          <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-4 text-left">
             <p className="text-xs font-semibold text-mc-text-secondary uppercase tracking-wide mb-3">
               Setup Instructions
             </p>
@@ -159,7 +159,7 @@ export function IntimoDashboardTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-5">
+        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-mc-accent" />
             <h3 className="text-sm font-semibold text-mc-text">Top Products (Last 7 Days)</h3>
@@ -186,7 +186,7 @@ export function IntimoDashboardTab() {
           </div>
         </div>
 
-        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl p-5">
+        <div className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-yellow-500" />

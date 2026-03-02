@@ -149,6 +149,16 @@ export async function POST(request: NextRequest) {
     const id = uuidv4();
     const now = new Date().toISOString();
 
+    // Get model from config (openclaw.json) instead of body.model
+    const gatewayAgentId = (body as { gateway_agent_id?: string }).gateway_agent_id || '';
+    const configModelMap = getPrimaryModelByAgentId();
+    const configModel = configModelMap.get(gatewayAgentId.toLowerCase()) 
+      || configModelMap.get(body.name.toLowerCase())
+      || null;
+    // Normalize model: use config if available, otherwise normalize body.model
+    const rawModel = configModel || body.model;
+    const normalizedModel = rawModel ? rawModel.split('/').pop() : null;
+
     run(
       `INSERT INTO agents (id, name, role, description, avatar_emoji, is_master, workspace_id, soul_md, user_md, agents_md, model, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -163,7 +173,7 @@ export async function POST(request: NextRequest) {
         body.soul_md || null,
         body.user_md || null,
         body.agents_md || null,
-        body.model || null,
+        normalizedModel,
         now,
         now,
       ]

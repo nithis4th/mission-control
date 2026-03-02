@@ -141,28 +141,29 @@ export function MissionQueue({ workspaceId }: MissionQueueProps) {
 
       {activeTab === 'queue' ? (
         <>
-          {/* Kanban Columns */}
-          <div className="flex-1 min-h-0 flex gap-3 p-3 overflow-x-auto">
+          {/* Kanban Columns - Responsive for iPad Pro 11" */}
+          {/* iPad landscape (>=1024px): 5 columns, iPad portrait (<1024px): scroll */}
+          <div className="flex-1 min-h-0 flex gap-3 p-4 overflow-x-auto">
             {COLUMNS.map((column) => {
               const columnTasks = getTasksByStatus(column.id);
               return (
                 <div
                   key={column.id}
-                  className={`flex-1 min-w-[220px] max-w-[300px] flex flex-col bg-mc-bg rounded-lg border border-mc-border/50 border-t-2 ${column.color}`}
+                  className="flex-1 min-w-[180px] max-w-[20%] flex flex-col bg-mc-bg rounded-lg border border-mc-border/50 border-t-2"
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, column.id)}
                 >
-                  {/* Column Header */}
-                  <div className="p-2 border-b border-mc-border flex items-center justify-between">
-                    <span className="text-xs font-medium uppercase text-mc-text-secondary">
+                  {/* Column Header - Compact */}
+                  <div className="px-3 py-2 border-b border-mc-border flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-mc-text-secondary">
                       {column.label}
                     </span>
-                    <span className="text-xs bg-mc-bg-tertiary px-2 py-0.5 rounded text-mc-text-secondary">
+                    <span className="text-[11px] bg-mc-bg-tertiary px-1.5 py-0.5 rounded text-mc-text-secondary font-medium">
                       {columnTasks.length}
                     </span>
                   </div>
 
-                  {/* Tasks */}
+                  {/* Tasks - Compact with vertical scroll */}
                   <div className="flex-1 overflow-y-auto p-2 space-y-2">
                     {columnTasks.map((task) => (
                       <TaskCard
@@ -171,6 +172,16 @@ export function MissionQueue({ workspaceId }: MissionQueueProps) {
                         onDragStart={handleDragStart}
                         onClick={() => setEditingTask(task)}
                         isDragging={draggedTask?.id === task.id}
+                        showMoveButtons={true}
+                        allColumns={COLUMNS}
+                        currentColumn={column.id}
+                        onMoveTask={(taskId, newStatus) => {
+                          // Handle move without drag - use updateTaskStatus function
+                          const taskToMove = tasks.find(t => t.id === taskId);
+                          if (taskToMove) {
+                            updateTaskStatus(taskToMove.id, newStatus as TaskStatus);
+                          }
+                        }}
                       />
                     ))}
                   </div>
@@ -203,9 +214,13 @@ interface TaskCardProps {
   onDragStart: (e: React.DragEvent, task: Task) => void;
   onClick: () => void;
   isDragging: boolean;
+  showMoveButtons?: boolean;
+  allColumns?: typeof COLUMNS;
+  currentColumn?: string;
+  onMoveTask?: (taskId: string, newStatus: string) => void;
 }
 
-function TaskCard({ task, onDragStart, onClick, isDragging }: TaskCardProps) {
+function TaskCard({ task, onDragStart, onClick, isDragging, showMoveButtons, allColumns, currentColumn, onMoveTask }: TaskCardProps) {
   const priorityStyles = {
     low: 'text-mc-text-secondary',
     normal: 'text-mc-accent',
@@ -231,21 +246,28 @@ function TaskCard({ task, onDragStart, onClick, isDragging }: TaskCardProps) {
         isDragging ? 'opacity-50 scale-95' : ''
       } ${isPlanning ? 'border-purple-500/40 hover:border-purple-500' : 'border-mc-border/50 hover:border-mc-accent/40'}`}
     >
-      {/* Drag handle bar */}
-      <div className="flex items-center justify-center py-1.5 border-b border-mc-border/30 opacity-0 group-hover:opacity-100 transition-opacity">
-        <GripVertical className="w-4 h-4 text-mc-text-secondary/50 cursor-grab" />
+      {/* Drag handle bar - visible on hover (desktop) */}
+      <div className="flex items-center justify-center py-1 border-b border-mc-border/30 opacity-0 group-hover:opacity-100 transition-opacity">
+        <GripVertical className="w-3.5 h-3.5 text-mc-text-secondary/50 cursor-grab" />
       </div>
 
-      {/* Card content */}
-      <div className="p-4">
+      {/* Card content - Compact */}
+      <div className="p-3">
         {/* Title */}
-        <h4 className="text-xs font-medium leading-snug line-clamp-2 mb-3">
+        <h4 className="text-sm font-medium leading-snug line-clamp-2 mb-2">
           {task.title}
         </h4>
         
+        {/* Description - max 2 lines */}
+        {task.description && (
+          <p className="text-xs text-mc-text-secondary line-clamp-2 mb-2">
+            {task.description}
+          </p>
+        )}
+        
         {/* Planning mode indicator */}
         {isPlanning && (
-          <div className="flex items-center gap-2 mb-3 py-2 px-3 bg-purple-500/10 rounded-md border border-purple-500/20">
+          <div className="flex items-center gap-2 mb-2 py-1.5 px-2 bg-purple-500/10 rounded-md border border-purple-500/20">
             <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse flex-shrink-0" />
             <span className="text-xs text-purple-400 font-medium">Continue planning</span>
           </div>
@@ -253,7 +275,7 @@ function TaskCard({ task, onDragStart, onClick, isDragging }: TaskCardProps) {
 
         {/* Assigned agent */}
         {task.assigned_agent && (
-          <div className="flex items-center gap-2 mb-3 py-1.5 px-2 bg-mc-bg-tertiary/50 rounded">
+          <div className="flex items-center gap-2 mb-2 py-1 px-2 bg-mc-bg-tertiary/50 rounded">
             <span className="text-sm">{(task.assigned_agent as unknown as { avatar_emoji: string }).avatar_emoji}</span>
             <span className="text-xs text-mc-text-secondary truncate">
               {(task.assigned_agent as unknown as { name: string }).name}
@@ -265,7 +287,7 @@ function TaskCard({ task, onDragStart, onClick, isDragging }: TaskCardProps) {
         <div className="flex items-center justify-between pt-2 border-t border-mc-border/20">
           <div className="flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${priorityDots[task.priority]}`} />
-            <span className={`text-xs capitalize ${priorityStyles[task.priority]}`}>
+            <span className={`text-[11px] capitalize ${priorityStyles[task.priority]}`}>
               {task.priority}
             </span>
           </div>
@@ -274,6 +296,47 @@ function TaskCard({ task, onDragStart, onClick, isDragging }: TaskCardProps) {
           </span>
         </div>
       </div>
+
+      {/* Move buttons - Touch friendly (visible on touch devices or always on mobile) */}
+      {showMoveButtons && allColumns && currentColumn && onMoveTask && (
+        <div className="flex items-center justify-between px-2 py-2 border-t border-mc-border/20 bg-mc-bg-tertiary/30 rounded-b-lg">
+          {/* Move Left */}
+          {allColumns.findIndex(c => c.id === currentColumn) > 0 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const currentIdx = allColumns.findIndex(c => c.id === currentColumn);
+                if (currentIdx > 0) {
+                  onMoveTask(task.id, allColumns[currentIdx - 1].id);
+                }
+              }}
+              className="flex items-center justify-center w-9 h-9 rounded bg-mc-bg-secondary hover:bg-mc-accent/20 hover:text-mc-accent transition-colors text-xs"
+              title="Move left"
+            >
+              ◀️
+            </button>
+          )}
+          <span className="text-[10px] text-mc-text-secondary/50">move</span>
+          {/* Move Right */}
+          {allColumns.findIndex(c => c.id === currentColumn) < allColumns.length - 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const currentIdx = allColumns.findIndex(c => c.id === currentColumn);
+                if (currentIdx < allColumns.length - 1) {
+                  onMoveTask(task.id, allColumns[currentIdx + 1].id);
+                }
+              }}
+              className="flex items-center justify-center w-9 h-9 rounded bg-mc-bg-secondary hover:bg-mc-accent/20 hover:text-mc-accent transition-colors text-xs"
+              title="Move right"
+            >
+              ▶️
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

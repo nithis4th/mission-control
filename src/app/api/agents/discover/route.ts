@@ -1,7 +1,26 @@
 import { NextResponse } from 'next/server';
-import { queryAll } from '@/lib/db';
+import { queryAll, queryOne } from '@/lib/db';
 import { listAgents } from '@/lib/openclaw/gateway-http';
 import type { Agent, DiscoveredAgent } from '@/lib/types';
+
+// Default emojis for agents (fallback when not imported yet)
+const DEFAULT_EMOJIS: Record<string, string> = {
+  eve: '🧠',
+  main: '🧠',
+  bluma: '🔧',
+  dexter: '🤖',
+  goku: '⚡',
+  monalisa: '🎨',
+  shelby: '📊',
+  sherlock: '🔍',
+};
+
+function getEmojiForAgent(agentId: string, dbAgent?: Agent): string {
+  // If already imported, use DB emoji
+  if (dbAgent?.avatar_emoji) return dbAgent.avatar_emoji;
+  // Otherwise use default emoji based on ID
+  return DEFAULT_EMOJIS[agentId.toLowerCase()] || '🤖';
+}
 
 // This route must always be dynamic - it queries live Gateway state + DB
 export const dynamic = 'force-dynamic';
@@ -25,15 +44,25 @@ export async function GET() {
     const importedGatewayIds = new Map(
       existingAgents.map((a) => [a.gateway_agent_id, a.id]),
     );
+    // Map for quick emoji lookup
+    const dbAgentsByGatewayId = new Map(
+      existingAgents.map((a) => [a.gateway_agent_id, a]),
+    );
 
-    const discovered: DiscoveredAgent[] = gatewayAgents.map((ga) => {
-      const gatewayId = ga.id || ga.name || '';
+    // Filter to only configured agents (exclude davinci and other unconfigured)
+    const configuredAgents = gatewayAgents.filter((ga) => ga.configured === true);
+
+    const discovered: DiscoveredAgent[] = configuredAgents.map((ga) => {
+      const gatewayId = ga.id || '';
       const alreadyImported = importedGatewayIds.has(gatewayId);
+      const dbAgent = dbAgentsByGatewayId.get(gatewayId);
+      
       return {
         id: gatewayId,
         name: ga.name || ga.label || gatewayId,
         label: ga.label,
         model: ga.model,
+        emoji: getEmojiForAgent(gatewayId, dbAgent),
         channel: undefined,
         status: undefined,
         already_imported: alreadyImported,

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Sidebar } from '@/components/Sidebar';
 import { AgentCardGrid } from '@/components/AgentCardGrid';
 import { AgentsSidebar } from '@/components/AgentsSidebar';
@@ -23,8 +24,10 @@ import { ContentTab } from '@/components/tabs/ContentTab';
 import { DocTab } from '@/components/tabs/DocTab';
 import { ApprovalTab } from '@/components/tabs/ApprovalTab';
 import { IntimoDashboardTab } from '@/components/tabs/IntimoDashboardTab';
+import DailyHistoryTab from '@/components/tabs/DailyHistoryTab';
 import { useMissionControl } from '@/lib/store';
 import { useSSE } from '@/hooks/useSSE';
+import { pageTransition } from '@/lib/animations';
 import { debug } from '@/lib/debug';
 import type { Task, Workspace } from '@/lib/types';
 
@@ -43,7 +46,7 @@ export default function WorkspacePage() {
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('agents');
 
   // Connect to SSE for real-time updates
   useSSE();
@@ -221,7 +224,13 @@ export default function WorkspacePage() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <motion.div
+        className="flex-1 flex flex-col overflow-hidden min-w-0"
+        variants={pageTransition}
+        initial="hidden"
+        animate="enter"
+        exit="exit"
+      >
         {/* Tab Content */}
         {activeTab === 'dashboard' && (
           <div className="flex-1 flex overflow-hidden">
@@ -237,7 +246,7 @@ export default function WorkspacePage() {
         )}
 
         {activeTab === 'chat' && (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden glow-card">
             <ChatPanel fullPage onBack={() => setActiveTab('team')} />
           </div>
         )}
@@ -250,77 +259,66 @@ export default function WorkspacePage() {
           </div>
         )}
 
-        {activeTab === 'history' && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-6xl mb-4">📜</div>
-              <h2 className="text-xl font-bold mb-2">Chat History</h2>
-              <p className="text-mc-text-secondary">
-                Browse past conversations by topic.
-              </p>
-              <p className="text-mc-text-secondary text-xs mt-2">
-                Coming soon...
-              </p>
-            </div>
-          </div>
+        {activeTab === 'history' && workspace && (
+          <DailyHistoryTab workspaceId={workspace.id} />
         )}
 
         {activeTab === 'team' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <TeamTab onOpenTab={setActiveTab} />
           </div>
         )}
 
         {activeTab === 'soul' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <SoulTab />
           </div>
         )}
 
         {activeTab === 'cost' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <CostTab />
           </div>
         )}
 
         {activeTab === 'cron' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <CronTab />
           </div>
         )}
 
         {activeTab === 'skills' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <SkillsTab />
           </div>
         )}
 
         {activeTab === 'tasks' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <TaskTab />
           </div>
         )}
 
         {activeTab === 'content' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <ContentTab />
           </div>
         )}
 
         {activeTab === 'docs' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <DocTab />
           </div>
         )}
 
         {activeTab === 'approval' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <ApprovalTab />
           </div>
         )}
 
         {activeTab === 'intimo' && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden glow-card">
             <IntimoDashboardTab />
           </div>
         )}
@@ -332,7 +330,7 @@ export default function WorkspacePage() {
             <LiveFeed />
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Debug Panel - only shows when debug mode enabled */}
       <SSEDebugPanel />

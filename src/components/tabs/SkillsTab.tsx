@@ -99,7 +99,7 @@ export function SkillsTab() {
           return (
             <div
               key={agent.agentId}
-              className="bg-mc-bg-secondary border border-mc-border rounded-xl overflow-hidden"
+              className="bg-mc-bg-secondary border border-mc-border rounded-xl glow-card overflow-hidden"
             >
               {/* Accordion Header */}
               <button

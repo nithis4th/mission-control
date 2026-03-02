@@ -168,6 +168,7 @@ export function createRestoreBranchFromRef(
   autoStashed: boolean;
   discardedChanges: boolean;
   stashRef: string | null;
+  strategy?: 'checkout-files';
 } {
   let autoStashed = false;
   let stashRef: string | null = null;
@@ -186,6 +187,7 @@ export function createRestoreBranchFromRef(
   run(`git checkout ${hash} -- . ':!src/lib/versions.ts' ':!src/app/api/versions'`);
 
   return {
+    branch: `working-tree@${shortHash}`,
     hash,
     shortHash,
     fromRef: ref,
