@@ -89,11 +89,16 @@ export function AgentHistoryTab({ agentId, agentName }: AgentHistoryTabProps) {
           }));
         }
 
-        // Filter sessions for this agent
-        const nameLower = agentName.toLowerCase();
+        // Filter sessions for this agent using gateway_agent_id from the agent's data
+        // Get gateway_agent_id from DB - need to fetch it
+        const agentRes = await fetch('/api/agents?workspace_id=default');
+        const agentsData = await agentRes.json();
+        const currentAgent = agentsData.find((a: any) => a.id === agentId);
+        const gatewayAgentId = currentAgent?.gateway_agent_id || agentName.toLowerCase();
+        
         const agentSessions = allSessions.filter((s: SessionInfo) => {
           const sid = (s.id || '').toLowerCase();
-          return sid.includes(`agent:${nameLower}`) || sid.includes(agentId.toLowerCase());
+          return sid.includes(`agent:${gatewayAgentId.toLowerCase()}`) || sid.includes(agentId.toLowerCase());
         });
 
         setSessions(agentSessions);
