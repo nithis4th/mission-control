@@ -1,0 +1,77 @@
+# .github/workflows/update-telegram-commands.yml
+# Auto-update Telegram Bot Commands เมื่อ merge/push ไปยัง main หรือเมื่อ workflow_dispatch
+
+name: Update Telegram Commands
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/telegram-commands.js'  # รันเฉพาะเมื่อไฟล์นี้เปลี่ยน
+  workflow_dispatch:                    # หรือ trigger manual ได้
+
+jobs:
+  update-commands:
+    name: Register Bot Commands
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate token exists
+        run: |
+          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
+            echo "ERROR: TELEGRAM_BOT_TOKEN secret is not set"
+            echo "กรุณาเพิ่ม secret ใน Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          echo "Token validated (length: ${#TELEGRAM_BOT_TOKEN})"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+      - name: Register Telegram Commands
+        id: register
+        run: node scripts/telegram-commands.js
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_SCOPE: default
+
+      - name: Verify registration
+        run: node scripts/telegram-commands.js --list
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_SCOPE: default
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "## Telegram Commands Updated ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Commands registered successfully at $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Command | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| /brief | Morning Brief |" >> $GITHUB_STEP_SUMMARY
+          echo "| /crypto | BTC/ETH Price |" >> $GITHUB_STEP_SUMMARY
+          echo "| /tasks | Pending Tasks |" >> $GITHUB_STEP_SUMMARY
+          echo "| /remind | Add Reminder |" >> $GITHUB_STEP_SUMMARY
+          echo "| /weather | Chiang Mai Weather |" >> $GITHUB_STEP_SUMMARY
+          echo "| /help | Show all commands |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "## Telegram Commands Update FAILED ❌" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          echo "Common issues:" >> $GITHUB_STEP_SUMMARY
+          echo "- TELEGRAM_BOT_TOKEN secret not set or expired" >> $GITHUB_STEP_SUMMARY
+          echo "- Network connectivity to api.telegram.org" >> $GITHUB_STEP_SUMMARY
