@@ -15,7 +15,8 @@ interface HistoryMessage {
 }
 
 interface SessionInfo {
-  id: string;
+  key: string;
+  id?: string;
   channel?: string;
   model?: string;
   status?: string;
@@ -82,7 +83,7 @@ export function AgentHistoryTab({ agentId, agentName }: AgentHistoryTabProps) {
           allSessions = sessionsData;
         } else if (sessionsData && typeof sessionsData === 'object' && Array.isArray(sessionsData.sessions)) {
           allSessions = sessionsData.sessions.map((s: Record<string, unknown>) => ({
-            id: (s.key as string) || '',
+            key: (s.key as string) || '',
             channel: s.channel as string,
             model: s.model as string,
             status: s.kind as string,
@@ -97,15 +98,15 @@ export function AgentHistoryTab({ agentId, agentName }: AgentHistoryTabProps) {
         const gatewayAgentId = currentAgent?.gateway_agent_id || agentName.toLowerCase();
         
         const agentSessions = allSessions.filter((s: SessionInfo) => {
-          const sid = (s.id || '').toLowerCase();
-          return sid.includes(`agent:${gatewayAgentId.toLowerCase()}`) || sid.includes(agentId.toLowerCase());
+          const sessionKey = (s.key || '').toLowerCase();
+          return sessionKey.includes(`agent:${gatewayAgentId.toLowerCase()}`) || sessionKey.includes(agentId.toLowerCase());
         });
 
         setSessions(agentSessions);
 
         // Auto-select the first session
         if (agentSessions.length > 0 && !selectedSession) {
-          setSelectedSession(agentSessions[0].id);
+          setSelectedSession(agentSessions[0].key);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -209,18 +210,18 @@ export function AgentHistoryTab({ agentId, agentName }: AgentHistoryTabProps) {
           <div className="mt-1 bg-mc-bg border border-mc-border rounded-lg overflow-hidden max-h-40 overflow-y-auto">
             {sessions.map((s) => (
               <button
-                key={s.id}
+                key={s.key}
                 onClick={() => {
-                  setSelectedSession(s.id);
+                  setSelectedSession(s.key);
                   setShowSessionPicker(false);
                 }}
                 className={`w-full text-left px-3 py-2 text-sm hover:bg-mc-bg-tertiary transition-colors ${
-                  selectedSession === s.id
+                  selectedSession === s.key
                     ? 'bg-mc-accent/10 text-mc-accent'
                     : 'text-mc-text'
                 }`}
               >
-                <div className="font-mono text-xs truncate">{s.id}</div>
+                <div className="font-mono text-xs truncate">{s.key}</div>
                 <div className="flex items-center gap-2 mt-1">
                   {s.channel && (
                     <span className="text-[10px] px-1.5 py-0.5 bg-mc-bg-tertiary rounded">
