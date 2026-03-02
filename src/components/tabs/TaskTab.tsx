@@ -1,5 +1,5 @@
 'use client';
-import VisualWorkflowBoard from './VisualWorkflowBoard';
+import TaskBoard from './TaskBoard';
 
 import { useEffect, useState } from 'react';
 import type { Task } from '@/lib/types';
