@@ -1,0 +1,65 @@
+name: Health Check
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+  # Allow manual trigger
+
+jobs:
+  health-check:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Check Mission Control Health
+        run: |
+          echo "Checking Mission Control health status..."
+          
+          # Check if Mission Control is responding
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health 2>/dev/null || echo "000")
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Mission Control is healthy"
+            echo "health_status=healthy" >> $GITHUB_ENV
+          else
+            echo "❌ Mission Control health check failed (HTTP $response)"
+            echo "health_status=unhealthy" >> $GITHUB_ENV
+          fi
+          
+          # Check if Gateway is responding
+          gateway_response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:18789/ 2>/dev/null || echo "000")
+          
+          if [ "$gateway_response" = "200" ] || [ "$gateway_response" = "101" ]; then
+            echo "✅ OpenClaw Gateway is healthy"
+          else
+            echo "❌ OpenClaw Gateway health check failed (HTTP $gateway_response)"
+          fi
+
+      - name: Get System Metrics
+        if: env.health_status == 'healthy'
+        run: |
+          echo "## System Metrics" >> $GITHUB_STEP_SUMMARY
+          
+          # CPU Usage
+          cpu_usage=$(top -l 1 -n 0 | grep "CPU usage" | awk '{print $3}' | sed 's/%//')
+          echo "- CPU: ${cpu_usage:-N/A}%" >> $GITHUB_STEP_SUMMARY
+          
+          # Memory Usage
+          mem_info=$(vm_stat | grep "Pages active" | awk '{print $3}' | sed 's/\.//')
+          echo "- Memory: Checking..." >> $GITHUB_STEP_SUMMARY
+          
+          # Disk Usage
+          disk_usage=$(df -h / | tail -1 | awk '{print $5}' | sed 's/%//')
+          echo "- Disk: ${disk_usage:-N/A}%" >> $GITHUB_STEP_SUMMARY
+
+      - name: Health Check Result
+        if: always()
+        run: |
+          if [ "${{ env.health_status }}" = "healthy" ]; then
+            echo "✅ Hourly health check passed"
+            exit 0
+          else
+            echo "❌ Hourly health check failed - service may be down"
+            exit 1
+          fi
